@@ -1,0 +1,71 @@
+flowchart TD
+    %% Estilos
+    classDef core fill:#1E293B,stroke:#38BDF8,stroke-width:3px,color:#FFFFFF;
+    classDef actor fill:#0F766E,stroke:#14B8A6,stroke-width:2px,color:#FFFFFF;
+    classDef hardware fill:#475569,stroke:#94A3B8,stroke-width:2px,color:#FFFFFF;
+    classDef enterprise fill:#312E81,stroke:#818CF8,stroke-width:2px,color:#FFFFFF;
+    classDef external fill:#701A75,stroke:#E879F9,stroke-width:2px,color:#FFFFFF;
+
+    %% Sistema Central
+    POS["<b>SISTEMA CENTRAL POS</b><br/>(Caja Negra / Terminal de Venta)"]:::core
+
+    %% Entidades: Personas
+    subgraph Actores_Humanos["Actores Humanos"]
+        Cajero["👤 Cajero / Operador"]:::actor
+        Admin["👤 Administrador / Supervisor"]:::actor
+        Cliente["👤 Cliente"]:::actor
+    end
+
+    %% Entidades: Hardware
+    subgraph Perifericos_Locales["Hardware & Periféricos"]
+        Scanner["📷 Lector de Código de Barras / QR"]:::hardware
+        Bascula["⚖️ Balanza / Báscula Digital"]:::hardware
+        Impresora["🖨️ Impresora Térmica / Fiscal"]:::hardware
+        Gaveta["💵 Gaveta de Dinero (Cash Drawer)"]:::hardware
+    end
+
+    %% Entidades: Sistemas Corporativos
+    subgraph Sistemas_Internos["Sistemas Corporativos"]
+        ERP["🏢 ERP / Inventario Central"]:::enterprise
+        Ecommerce["🛒 Plataforma E-commerce (Omnicanal)"]:::enterprise
+        IdP["🔐 Proveedor de Identidad / IAM (SSO)"]:::enterprise
+    end
+
+    %% Entidades: Terceros y Fiscal
+    subgraph Servicios_Externos["Servicios Externos & Financieros"]
+        Pasarela["💳 Red de Adquirencia / Datáfono (Pinpad)"]:::external
+        Tax["🏛️ Autoridad Tributaria (Factura Electrónica)"]:::external
+        CRM["🎁 CRM / Motor de Lealtad y Promociones"]:::external
+        Notif["📩 Proveedor de Notificaciones (Email / WhatsApp)"]:::external
+    end
+
+    %% Flujos - Actores Humanos
+    Cajero -->|"Credenciales, Apertura/Cierre de turno, Ítems de venta"| POS
+    POS -->|"Interfaz de cobro, Estado de transacción, Total a cobrar"| POS
+    Admin -->|"Autorización de anulaciones, Ajustes de precios, Arqueo de caja"| POS
+    POS -->|"Reporte Z/X, Alertas de discrepancia en caja"| Admin
+    Cliente -->|"Medio de pago, Documento de identificación"| POS
+    POS -->|"Comprobante digital / Físico de compra"| Cliente
+
+    %% Flujos - Hardware
+    Scanner -->|"Código SKU / EAN / QR leído"| POS
+    Bascula -->|"Peso bruto/neto de producto a granel"| POS
+    POS -->|"Comandos ESC/POS de impresión de ticket"| Impresora
+    POS -->|"Pulso eléctrico de apertura"| Gaveta
+
+    %% Flujos - Sistemas Corporativos
+    ERP -->|"Catálogo de productos, Precios, Listas de costos"| POS
+    POS -->|"Descarga de stock en tiempo real, Registro consolidado de ventas"| ERP
+    Ecommerce -->|"Órdenes Click & Collect / Retiro en tienda"| POS
+    POS -->|"Actualización de stock local para ventas online"| Ecommerce
+    POS -->|"Petición de autenticación y roles"| IdP
+    IdP -->|"Token JWT / Permisos de sesión"| POS
+
+    %% Flujos - Servicios Externos
+    POS -->|"Petición de cobro con monto y token"| Pasarela
+    Pasarela -->|"Respuesta de autorización (Voucher / Código de aprobación)"| POS
+    POS -->|"XML / JSON de factura firmada digitalmente"| Tax
+    Tax -->|"CUFE / UUID fiscal y timbre digital de validación"| Tax
+    POS -->|"Consulta de puntos / Perfil de cliente"| CRM
+    CRM -->|"Descuentos aplicables, Cupones, Saldo de puntos"| POS
+    POS -->|"Orden de envío de ticket digital (E-receipt)"| Notif
