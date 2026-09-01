@@ -47,7 +47,8 @@ def linesPrintsEquals():
 # DEFINICIÓN DE LA MATRIZ DE REQUERIMIENTOS INTERSECTORIALES (30x30)
 # ==============================================================================
 
-# Matriz A de requerimientos entre los 30 sectores económicos (obtenida del Colab oficial)
+# Matriz A de requerimientos entre los 30 sectores económicos (obtenida del Colab oficial
+# (https://colab.research.google.com/drive/1hZE7pRAhSXtk4YFC5MnwIS0SkI_FRVfd?usp=sharing))
 MATRIZ_A_ECONOMIA = np.array([
     [0.,4.,8.,5.,7.,3.,7.,8.,5.,4.,8.,8.,3.,6.,5.,2.,8.,6.,2.,5.,1.,6.,9.,1.,3.,7.,4.,9.,3.,5.],
     [3.,7.,5.,9.,7.,2.,4.,9.,2.,9.,5.,2.,4.,7.,8.,3.,1.,4.,2.,8.,4.,2.,6.,6.,4.,6.,2.,2.,4.,8.],
