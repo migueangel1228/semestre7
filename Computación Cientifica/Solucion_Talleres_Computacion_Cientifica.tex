@@ -1,0 +1,646 @@
+\documentclass[11pt,a4paper]{article}
+
+% --- PAQUETES DE IDIOMA Y CODIFICACIÓN ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla]{babel}
+
+% --- MATEMÁTICAS Y SÍMBOLOS ---
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{mathtools}
+\usepackage{bm}
+
+% --- FORMATO Y DISEÑO DE PÁGINA ---
+\usepackage[top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm]{geometry}
+\usepackage{fancyhdr}
+\usepackage{microtype}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{titlesec}
+
+% --- COLORES Y CAJAS ---
+\usepackage[table]{xcolor}
+\definecolor{pujblue}{RGB}{0, 51, 102}
+\definecolor{darkblue}{RGB}{16, 44, 87}
+\definecolor{subtleblue}{RGB}{240, 244, 250}
+\definecolor{darkgray}{RGB}{60, 60, 60}
+\definecolor{codebg}{RGB}{248, 249, 250}
+
+% --- ENLACES Y CÓDIGO ---
+\usepackage{listings}
+\usepackage[colorlinks=true, linkcolor=pujblue, citecolor=pujblue, urlcolor=pujblue]{hyperref}
+
+% --- CONFIGURACIÓN DE LISTINGS ---
+\lstset{
+    backgroundcolor=\color{codebg},
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{pujblue}\bfseries,
+    commentstyle=\color{gray}\itshape,
+    stringstyle=\color{teal},
+    breaklines=true,
+    frame=single,
+    rulecolor=\color{black!20},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    numbersep=8pt,
+    tabsize=4,
+    showstringspaces=false
+}
+
+% --- ESTILO DE ENCABEZADOS Y PIES ---
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{darkgray}\textit{Pontificia Universidad Javeriana Cali --- Computación Científica}}
+\fancyhead[R]{\small\color{darkgray}\textit{Talleres 1, 2 y 3}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+% --- DEFINICIÓN DE ENTORNOS ---
+\theoremstyle{definition}
+\newtheorem{definicion}{Definición}[section]
+\newtheorem{ejemplo}{Ejemplo}[section]
+\theoremstyle{remark}
+\newtheorem{observacion}{Observación}[section]
+
+\titleformat{\section}{\Large\bfseries\color{pujblue}}{\thesection}{1em}{}[\titlerule]
+\titleformat{\subsection}{\large\bfseries\color{darkblue}}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{darkblue}}{\thesubsubsection}{1em}{}
+
+% ==============================================================================
+% DOCUMENTO PRINCIPAL
+% ==============================================================================
+\begin{document}
+
+% --- PORTADA ---
+\begin{titlepage}
+    \centering
+    \vspace*{1cm}
+    {\scshape\LARGE Pontificia Universidad Javeriana Cali \par}
+    \vspace{0.4cm}
+    {\scshape\Large Facultad de Ingeniería y Ciencias \par}
+    {\large Departamento de Electrónica y Ciencias de la Computación \par}
+    \vspace{1.5cm}
+    
+    \rule{\linewidth}{1.5pt} \\[0.4cm]
+    {\huge\bfseries\color{pujblue} Solución Integral de Talleres: \\[0.2cm] 
+    Factorización LU, PLU y Factorización QR \par}
+    \vspace{0.2cm}
+    {\Large\itshape Computación Científica y Métodos Numéricos Lineales \par}
+    \rule{\linewidth}{1.5pt} \\[1.5cm]
+    
+    \begin{minipage}[t]{0.48\textwidth}
+        \large
+        \textbf{Profesor:}\\
+        Juan Fernando Paz, Ph.D.
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.48\textwidth}
+        \begin{flushright}
+            \large
+            \textbf{Materia:}\\
+            Computación Científica\\
+            Semestre 7
+        \end{flushright}
+    \end{minipage}
+    
+    \vfill
+    {\large Santiago de Cali, Colombia \par}
+    {\large 2026 \par}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% ==============================================================================
+% SECCIÓN 1: TALLER 1 - FACTORIZACIÓN LU (MÉTODO DE CROUT)
+% ==============================================================================
+\section{Taller 1: Factorización LU (Método de Crout) y Aplicaciones}
+
+\subsection{Fundamento Teórico: Método de Crout}
+La factorización LU expresa una matriz invertible $A \in \mathbb{R}^{n \times n}$ como el producto de dos matrices triangulares:
+\begin{equation}
+    A = L \, U
+\end{equation}
+donde $L$ es una matriz triangular inferior y $U$ es triangular superior. En la variante de \textbf{Crout}:
+\begin{itemize}[leftmargin=*]
+    \item $L$ contiene los elementos calculados de la diagonal principal ($l_{ii} \neq 1$ en general).
+    \item $U$ es una matriz triangular superior unitaria, es decir, posee unos en su diagonal principal ($u_{ii} = 1$).
+\end{itemize}
+
+Las fórmulas recursivas paso a paso para cada etapa $j = 0, 1, \dots, n-1$ son:
+\begin{enumerate}
+    \item \textbf{Cálculo de la columna $j$ de $L$} (para $i = j, j+1, \dots, n-1$):
+    \begin{equation}
+        l_{ij} = a_{ij} - \sum_{k=0}^{j-1} l_{ik} u_{kj}
+    \end{equation}
+    \item \textbf{Cálculo de la fila $j$ de $U$} (para $k_2 = j+1, \dots, n-1$):
+    \begin{equation}
+        u_{j k_2} = \frac{a_{j k_2} - \sum_{r=0}^{j-1} l_{jr} u_{r k_2}}{l_{jj}}
+    \end{equation}
+\end{enumerate}
+
+Una vez calculadas $L$ y $U$, cualquier sistema lineal $Ax = b$ se resuelve en dos pasos mediante desacoplamiento triangular:
+\begin{align}
+    L y &= b \quad \text{(Sustitución hacia adelante)} \\
+    U x &= y \quad \text{(Sustitución hacia atrás)}
+\end{align}
+
+\subsection{Ejercicio 1: Planificación de la Producción de Tres Productos}
+Una fábrica manufactura tres productos ($A, B, C$) utilizando acero, plástico y aluminio. La relación técnica de insumo-producto conduce al sistema:
+\begin{equation}
+    \begin{pmatrix}
+        2 & 1 & 1 \\
+        1 & 3 & 1 \\
+        1 & 1 & 2
+    \end{pmatrix}
+    \begin{pmatrix}
+        x_1 \\ x_2 \\ x_3
+    \end{pmatrix}
+    =
+    \begin{pmatrix}
+        b_1 \\ b_2 \\ b_3
+    \end{pmatrix}
+\end{equation}
+
+\subsubsection{Actividad 1: Factorización de Crout de la Matriz de Coeficientes}
+Aplicando el algoritmo de Crout a la matriz de coeficientes $A$:
+\begin{itemize}
+    \item \textbf{Etapa $j = 0$:}
+    \begin{align*}
+        l_{00} &= a_{00} = 2, \quad l_{10} = a_{10} = 1, \quad l_{20} = a_{20} = 1 \\
+        u_{01} &= \frac{a_{01}}{l_{00}} = \frac{1}{2} = 0.5, \quad u_{02} = \frac{a_{02}}{l_{00}} = \frac{1}{2} = 0.5
+    \end{align*}
+    \item \textbf{Etapa $j = 1$:}
+    \begin{align*}
+        l_{11} &= a_{11} - l_{10} u_{01} = 3 - (1)(0.5) = 2.5 \\
+        l_{21} &= a_{21} - l_{20} u_{01} = 1 - (1)(0.5) = 0.5 \\
+        u_{12} &= \frac{a_{12} - l_{10}u_{02}}{l_{11}} = \frac{1 - (1)(0.5)}{2.5} = \frac{0.5}{2.5} = 0.2
+    \end{align*}
+    \item \textbf{Etapa $j = 2$:}
+    \begin{align*}
+        l_{22} &= a_{22} - (l_{20}u_{02} + l_{21}u_{12}) = 2 - (1\cdot 0.5 + 0.5\cdot 0.2) = 2 - 0.6 = 1.4
+    \end{align*}
+\end{itemize}
+
+Por consiguiente, las matrices triangulares obtenidas son:
+\begin{equation}
+    L = \begin{pmatrix}
+        2.0 & 0.0 & 0.0 \\
+        1.0 & 2.5 & 0.0 \\
+        1.0 & 0.5 & 1.4
+    \end{pmatrix}, \qquad
+    U = \begin{pmatrix}
+        1.0 & 0.5 & 0.5 \\
+        0.0 & 1.0 & 0.2 \\
+        0.0 & 0.0 & 1.0
+    \end{pmatrix}
+\end{equation}
+
+\subsubsection{Actividad 2: Solución para los Tres Escenarios de Demanda}
+Utilizando la sustitución hacia adelante ($Ly = b$) y hacia atrás ($Ux = y$):
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Escenario 1 ($b = [100, 120, 90]^T$):}
+    \begin{align*}
+        Ly = b &\implies y = [50.0000, 28.0000, 18.5714]^T \\
+        Ux = y &\implies x_1 = 28.5714, \quad x_2 = 24.2857, \quad x_3 = 18.5714
+    \end{align*}
+    \item \textbf{Escenario 2 ($b = [80, 100, 110]^T$):}
+    \begin{align*}
+        Ly = b &\implies y = [40.0000, 24.0000, 41.4286]^T \\
+        Ux = y &\implies x_1 = 11.4286, \quad x_2 = 15.7143, \quad x_3 = 41.4286
+    \end{align*}
+    \item \textbf{Escenario 3 ($b = [150, 160, 140]^T$):}
+    \begin{align*}
+        Ly = b &\implies y = [75.0000, 34.0000, 34.2857]^T \\
+        Ux = y &\implies x_1 = 44.2857, \quad x_2 = 27.1429, \quad x_3 = 34.2857
+    \end{align*}
+\end{enumerate}
+
+\subsubsection{Actividad 3: Justificación de Eficiencia Computacional}
+La eliminación gaussiana clásica aplicada a un sistema aumentado $[A \mid b]$ tiene un costo asintótico de $\mathcal{O}\left(\frac{2}{3}n^3\right)$ operaciones de punto flotante (FLOPs). Si se resuelven $m$ escenarios independientes, el costo total escala a:
+\begin{equation}
+    \text{Costo}_{\text{Gauss}} = m \times \mathcal{O}\left(\frac{2}{3}n^3\right)
+\end{equation}
+En cambio, la factorización LU calcula la descomposición de $A$ \textbf{una sola vez} con costo $\mathcal{O}\left(\frac{2}{3}n^3\right)$, y para cada nuevo término independiente $b^{(k)}$ únicamente resuelve dos sistemas triangulares (sustitución adelante y atrás), cada uno con costo $\mathcal{O}(n^2)$:
+\begin{equation}
+    \text{Costo}_{\text{LU}} = \mathcal{O}\left(\frac{2}{3}n^3\right) + m \times \mathcal{O}(2n^2)
+\end{equation}
+Para $n$ moderado o grande, el término cúbico domina. La factorización LU evita trabajo redundante sobre la matriz de coeficientes y acelera drásticamente el tiempo de cálculo.
+
+\subsubsection{Actividad 4: Validación y Comparación con SciPy}
+Mediante las funciones \texttt{lu\_factor} y \texttt{lu\_solve} de \texttt{scipy.linalg}:
+\begin{itemize}[leftmargin=*]
+    \item Las soluciones coinciden exactamente hasta el límite de precisión de máquina ($\sim 10^{-15}$).
+    \item SciPy emplea las subrutinas \texttt{dgetrf} y \texttt{dgetrs} de LAPACK, implementadas en Fortran/C con pivoteo parcial automático y vectorización SIMD, optimizadas para alta concurrencia en memoria caché.
+\end{itemize}
+
+\subsection{Ejercicio 2: Estimación de Emisiones en una Red de 50 Sensores}
+Se modela una red de 50 sensores que reciben contribuciones de 50 fuentes de contaminantes mediante el sistema lineal $Ax = b$, donde $A \in \mathbb{R}^{50 \times 50}$ es la matriz de influencia y $b \in \mathbb{R}^{50}$ son las mediciones.
+
+\subsubsection{Acondicionamiento: Diagonal Dominante Estricta}
+Para evitar pivotes nulos o inestabilidad numérica en la factorización directa sin pivoteo, la matriz sintética generada en $[0, 1]$ se transforma mediante:
+\begin{equation}
+    a_{ii} = \sum_{\substack{j=1 \\ j \neq i}}^{50} |a_{ij}| + 1
+\end{equation}
+\textbf{Significado matemático:} Esta condición impone que:
+\begin{equation}
+    |a_{ii}| > \sum_{j \neq i} |a_{ij}|, \quad \forall i
+\end{equation}
+Por el \textbf{Teorema de los Círculos de Gershgorin}, ningún autovalor de $A$ puede ser cero, garantizando que $\det(A) \neq 0$ y que los menores principales líderes son no singulares. Así, la factorización LU existe y es estrictamente estable sin necesidad de pivoteo.
+
+\subsubsection{Resultados Numéricos y Verificación del Residuo}
+Resolviendo el sistema para un vector $b \in [0, 100]^{50}$ mediante el algoritmo de Crout:
+\begin{itemize}[leftmargin=*]
+    \item Error de factorización: $\|A - LU\|_2 = 3.91 \times 10^{-15}$.
+    \item Vector residuo: $r = Ax - b$.
+    \item Norma euclidiana del residuo: $\|r\|_2 = 6.69 \times 10^{-14}$.
+\end{itemize}
+El error es del orden de la precisión de máquina de IEEE 754 de doble precisión, lo cual verifica que la solución obtenida es numéricamente exacta.
+
+\subsubsection{Pregunta de Análisis: Reutilización de Factores}
+Si las fuentes y los sensores mantienen su posición física, la matriz $A$ es invariante en el tiempo y solo cambia el vector de mediciones $b(t)$.
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Se reutilizan:} Las matrices $L$ y $U$ ya descompuestas.
+    \item \textbf{Operaciones por medición:} Solo se efectúan las sustituciones $Ly = b_{\text{nuevo}}$ y $Ux = y$.
+    \item \textbf{Ahorro cuantitativo:} Descomponer $A$ toma $\approx \frac{2}{3}(50)^3 \approx 83{,}333$ FLOPs. Resolver con $L$ y $U$ toma solo $2(50)^2 = 5{,}000$ FLOPs, logrando más del \textbf{94\% de reducción en el tiempo de procesamiento}.
+\end{itemize}
+
+\newpage
+% ==============================================================================
+% SECCIÓN 2: TALLER 2 - FACTORIZACIÓN PLU (MODELO ECONÓMICO)
+% ==============================================================================
+\section{Taller 2: Modelo Económico Multisectorial mediante Factorización PLU}
+
+\subsection{Fundamento Teórico: Factorización PLU}
+Cuando una matriz $A$ no posee diagonal estrictamente dominante, el método directo de eliminación gaussiana puede encontrar pivotes nulos ($a_{kk} = 0$) o pivotes muy cercanos a cero, produciendo división por cero o errores graves por cancelación catastrófica.
+
+La \textbf{Factorización PLU} con pivoteo parcial garantiza estabilidad numérica mediante una matriz de permutación $P$:
+\begin{equation}
+    P A = L U \iff A = P^T L U
+\end{equation}
+donde:
+\begin{itemize}[leftmargin=*]
+    \item $P$ es una matriz ortogonal de permutación ($P^T P = I$).
+    \item $L$ es triangular inferior unitaria ($l_{ii} = 1$) con multiplicadores $|l_{ij}| \le 1$.
+    \item $U$ es triangular superior.
+\end{itemize}
+
+Para resolver $Ax = b$:
+\begin{equation}
+    P A x = P b \implies L \underbrace{(U x)}_{y} = P b
+\end{equation}
+Se resuelve en dos etapas:
+\begin{align}
+    L y &= P b \quad \text{(Sustitución hacia adelante con vector permutado)} \\
+    U x &= y \quad \text{(Sustitución hacia atrás)}
+\end{align}
+
+\subsection{Actividad 1: Justificación del Pivoteo Parcial en la Matriz Económica}
+Al inspeccionar la matriz de requerimientos intersectoriales $A \in \mathbb{R}^{30 \times 30}$ de la economía:
+\begin{equation}
+    a_{00} = 0.0, \quad a_{5,5} = 0.0, \quad a_{10,10} = 0.0, \quad a_{15,15} = 0.0, \quad a_{20,20} = 0.0, \quad a_{25,25} = 0.0
+\end{equation}
+\begin{enumerate}
+    \item \textbf{División por cero inminente:} El primer multiplicador de eliminación gaussiana requiere $m_{i0} = a_{i0} / a_{00}$. Al ser $a_{00} = 0$, el algoritmo directo de LU colapsa en el primer paso.
+    \item \textbf{Control del error de redondeo:} El pivoteo parcial selecciona $\max_{i \ge k} |a_{ik}|$, forzando que $|m_{ik}| \le 1$, lo que acota el crecimiento numérico y preserva la estabilidad.
+\end{enumerate}
+
+\subsection{Actividades 2 y 3: Factorización y Verificación Numérica}
+Implementando el algoritmo de eliminación de Gauss con pivoteo parcial sobre la matriz $A \in \mathbb{R}^{30 \times 30}$, se obtienen $P, L, U$:
+\begin{equation}
+    \|P A - L U\|_2 = 1.2223 \times 10^{-14}
+\end{equation}
+La discrepancia es del orden de la precisión de máquina, confirmando la exactitud de la factorización calculada.
+
+\subsection{Actividades 4, 5 y 6: Escenarios Económicos y Residuos}
+Se simulan tres condiciones de demanda final $b \in [50, 500]^{30}$:
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Escenario 1 (Condiciones Normales):} Demanda base $b^{(1)}$.
+    \item \textbf{Escenario 2 (Expansión Económica):} $b^{(2)} = 1.30 \times b^{(1)}$ ($+30\%$ de demanda).
+    \item \textbf{Escenario 3 (Desaceleración Económica):} $b^{(3)} = 0.70 \times b^{(1)}$ ($-30\%$ de demanda).
+\end{itemize}
+
+Los resultados y residuos obtenidos se resumen en la Tabla \ref{tab:residuos_plu}.
+\begin{table}[h!]
+    \centering
+    \small
+    \caption{Resumen de producción total y verificación de residuos en los tres escenarios.}
+    \label{tab:residuos_plu}
+    \begin{tabular}{lccc}
+        \toprule
+        \textbf{Escenario} & \textbf{Demanda Total $\sum b$} & \textbf{Producción Total $\sum x$} & \textbf{Norma del Residuo $\|Ax - b\|_2$} \\
+        \midrule
+        1. Normal & $7455.75$ & $160.01$ & $3.6391 \times 10^{-12}$ \\
+        2. Expansión (+30\%) & $9692.48$ & $208.01$ & $6.1360 \times 10^{-12}$ \\
+        3. Desaceleración (-30\%) & $5219.03$ & $112.00$ & $2.3253 \times 10^{-12}$ \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsection{Sección 3: Análisis Económico}
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Sectores con mayor producción:} Los sectores clave corresponden a los índices $[8, 11, 29]$, con producciones de $233.94$, $229.56$ y $200.34$ unidades en condiciones normales. Representan industrias de insumos críticos de los cuales dependen los demás sectores (energía, transporte, insumos básicos).
+    \item \textbf{Sectores con mayor impacto en expansión:} Los mismos sectores $[8, 11, 29]$ experimentan los mayores aumentos absolutos ($+70.18$, $+68.87$ y $+60.10$ unidades), con una expansión media del $30.00\%$.
+    \item \textbf{Sectores más vulnerables ante desaceleración:} Los sectores $[8, 11, 29]$ sufren las mayores caídas de producción en términos absolutos, contrayéndose un $30.00\%$.
+    \item \textbf{Constancia de $A$ frente a $b$:} La matriz $A$ modela la estructura tecnológica y las funciones de producción intersectoriales (coeficientes de Leontief), que cambian lentamente a mediano/largo plazo con innovaciones técnicas. En contraste, el vector $b$ representa la demanda de consumo final (hogares, gobierno, exportaciones), sujeta a fluctuaciones del ciclo económico.
+    \item \textbf{Reutilización ante 100 nuevos vectores de demanda:} \textbf{No} es necesario recomputar $P, L, U$. La descomposición $PA = LU$ se calcula una sola vez y se preserva en memoria.
+    \item \textbf{Operaciones repetidas por cada vector:} Únicamente se calculan:
+    \begin{enumerate}
+        \item Permutación del vector de demanda: $\tilde{b} = P b_{\text{nuevo}}$.
+        \item Sustitución hacia adelante: $Ly = \tilde{b}$ con costo $\mathcal{O}(n^2)$.
+        \item Sustitución hacia atrás: $Ux = y$ con costo $\mathcal{O}(n^2)$.
+    \end{enumerate}
+    Costo por nuevo vector: $2(30)^2 = 1{,}800$ FLOPs frente a $\frac{2}{3}(30)^3 = 18{,}000$ FLOPs de re-factorizar, logrando un \textbf{ahorro del 90\% de operaciones}.
+\end{enumerate}
+
+\subsection{Sección 4: Análisis de Tiempo (Inversa vs. Factorización PLU)}
+Se realizó un benchmark comparativo de $10{,}000$ iteraciones entre calcular la solución con la inversa analítica $x = A^{-1}b$ y resolver mediante factorización PLU (Tabla \ref{tab:benchmark_tiempo}).
+
+\begin{table}[h!]
+    \centering
+    \small
+    \caption{Comparativa de tiempo computacional para $10{,}000$ iteraciones.}
+    \label{tab:benchmark_tiempo}
+    \begin{tabular}{lcc}
+        \toprule
+        \textbf{Método} & \textbf{Tiempo Total (s)} & \textbf{Tiempo por Operación ($\mu$s)} \\
+        \midrule
+        \multicolumn{3}{l}{\textit{A. Calculando desde cero cada vez}} \\
+        Matriz Inversa (\texttt{np.linalg.inv}) & $0.1479$ & $14.79$ \\
+        PLU SciPy (\texttt{lu\_factor} + \texttt{lu\_solve}) & $0.1616$ & $16.16$ \\
+        PLU Completo (\texttt{scipy.linalg.lu}) & $1.8109$ & $181.09$ \\
+        \midrule
+        \multicolumn{3}{l}{\textit{B. Reutilizando la estructura precalculada}} \\
+        Producto con Inversa precalculada ($A^{-1}b$) & $0.0094$ & $0.94$ \\
+        Sustituciones \texttt{lu\_solve} de SciPy & $0.0760$ & $7.60$ \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\textbf{Justificación de la regla de oro: ``Nunca calcular la inversa explícita $A^{-1}$'':}
+\begin{enumerate}
+    \item \textbf{Costo computacional:} Invertir $A$ explícitamente requiere $\approx 2n^3$ FLOPs (el triple de una factorización PLU que requiere $\approx \frac{2}{3}n^3$ FLOPs).
+    \item \textbf{Estabilidad numérica:} Calcular $A^{-1}$ y luego multiplicar por $b$ acumula dos fuentes de error de redondeo. Además, la inversa destruye cualquier estructura dispersa (sparse) o banda de la matriz original.
+    \item Resolver mediante sistemas triangulares acoplados ($LUx = Pb$) mantiene el número de condición efectivo y asegura estabilidad óptima.
+\end{enumerate}
+
+\newpage
+% ==============================================================================
+% SECCIÓN 3: TALLER 3 - FACTORIZACIÓN QR Y GRAM-SCHMIDT
+% ==============================================================================
+\section{Taller 3: Factorización QR, Bases, Ortogonalidad y Gram-Schmidt}
+
+\subsection{Ejercicio 1: Bases, Columnas e Invertibilidad}
+Dada la matriz:
+\begin{equation}
+    A = \begin{pmatrix}
+        1 & 2 & 0 \\
+        0 & 1 & 1 \\
+        1 & 3 & 1
+    \end{pmatrix}
+\end{equation}
+
+\subsubsection{a) Independencia Lineal de las Columnas}
+Sean las columnas de $A$:
+\begin{equation}
+    a_1 = \begin{pmatrix} 1 \\ 0 \\ 1 \end{pmatrix}, \quad
+    a_2 = \begin{pmatrix} 2 \\ 1 \\ 3 \end{pmatrix}, \quad
+    a_3 = \begin{pmatrix} 0 \\ 1 \\ 1 \end{pmatrix}
+\end{equation}
+Observamos la combinación lineal:
+\begin{equation}
+    2 a_1 - a_2 + a_3 = 2 \begin{pmatrix} 1 \\ 0 \\ 1 \end{pmatrix} - \begin{pmatrix} 2 \\ 1 \\ 3 \end{pmatrix} + \begin{pmatrix} 0 \\ 1 \\ 1 \end{pmatrix} = \begin{pmatrix} 2 - 2 + 0 \\ 0 - 1 + 1 \\ 2 - 3 + 1 \end{pmatrix} = \begin{pmatrix} 0 \\ 0 \\ 0 \end{pmatrix}
+\end{equation}
+Al existir una combinación lineal no trivial igual al vector nulo, las columnas de $A$ son \textbf{linealmente dependientes}.
+
+\subsubsection{b) Rango de la Matriz $A$}
+Como las columnas $a_1$ y $a_3$ no son múltiplos entre sí, forman un conjunto linealmente independiente de tamaño 2. Por tanto:
+\begin{equation}
+    \text{rank}(A) = 2
+\end{equation}
+
+\subsubsection{c) Invertibilidad de $A$}
+Calculando el determinante por cofactores en la primera fila:
+\begin{equation}
+    \det(A) = 1(1\cdot 1 - 1\cdot 3) - 2(0\cdot 1 - 1\cdot 1) + 0 = 1(-2) - 2(-1) = -2 + 2 = 0
+\end{equation}
+Como $\det(A) = 0$ (o equivalentemente $\text{rank}(A) = 2 < 3$), la matriz $A$ \textbf{no es invertible} (es singular).
+
+\subsubsection{d) Relación de Equivalencia}
+Por el \textbf{Teorema Fundamental de las Matrices Invertibles}:
+\begin{equation}
+    A \text{ es invertible} \iff \text{rank}(A) = 3 \iff \text{Las columnas de } A \text{ son linealmente independientes}
+\end{equation}
+Las tres proposiciones son lógicamente equivalentes en $\mathbb{R}^3$. La falla de una de ellas implica inmediatamente la falsedad de las otras dos.
+
+\subsubsection{e) y f) Existencia, Unicidad y Coordenadas}
+Si las columnas $\{a_1, a_2, a_3\}$ forman una base de $\mathbb{R}^3$:
+\begin{itemize}[leftmargin=*]
+    \item Por generar todo el espacio, para cualquier $b \in \mathbb{R}^3$ existen escalares tales que $x_1 a_1 + x_2 a_2 + x_3 a_3 = b$ (\textbf{existencia}).
+    \item Por ser linealmente independientes, dichos escalares son únicos (\textbf{unicidad}).
+    \item En la ecuación matricial $Ax = b$, las componentes del vector $x = [x_1, x_2, x_3]^T$ son exactamente las \textbf{coordenadas de $b$} respecto a la base de columnas de $A$.
+\end{itemize}
+
+\subsubsection{Pregunta Conceptual: Origen de la Factorización QR}
+La factorización QR parte naturalmente de las columnas porque una matriz $A = [a_1 \mid \dots \mid a_n]$ representa un conjunto generador de un subespacio. QR transforma dicha base (que puede ser oblicua o mal condicionada) en una base ortonormal $Q = [q_1 \mid \dots \mid q_n]$ preservando los subespacios anidados $\text{Span}(a_1, \dots, a_k) = \text{Span}(q_1, \dots, q_k)$ para todo $k$.
+
+\subsection{Ejercicio 2: Proyecciones y Proceso de Gram-Schmidt}
+Sean los vectores en $\mathbb{R}^2$:
+\begin{equation}
+    a_1 = \begin{pmatrix} 1 \\ 2 \end{pmatrix}, \quad a_2 = \begin{pmatrix} 2 \\ 1 \end{pmatrix}
+\end{equation}
+
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Cálculo de $\|a_1\|$:}
+    \begin{equation}
+        \|a_1\| = \sqrt{1^2 + 2^2} = \sqrt{5} \approx 2.2361
+    \end{equation}
+    \item \textbf{Primer vector unitario $q_1$:}
+    \begin{equation}
+        q_1 = \frac{a_1}{\|a_1\|} = \frac{1}{\sqrt{5}} \begin{pmatrix} 1 \\ 2 \end{pmatrix}
+    \end{equation}
+    \item \textbf{Proyección de $a_2$ sobre $q_1$:}
+    \begin{equation}
+        q_1^T a_2 = \frac{1}{\sqrt{5}} (1\cdot 2 + 2\cdot 1) = \frac{4}{\sqrt{5}}
+    \end{equation}
+    \begin{equation}
+        \text{proj}_{q_1}(a_2) = (q_1^T a_2) q_1 = \frac{4}{\sqrt{5}} \left( \frac{1}{\sqrt{5}} \begin{pmatrix} 1 \\ 2 \end{pmatrix} \right) = \frac{4}{5} \begin{pmatrix} 1 \\ 2 \end{pmatrix} = \begin{pmatrix} 4/5 \\ 8/5 \end{pmatrix}
+    \end{equation}
+    \item \textbf{Construcción del vector ortogonal $v_2$:}
+    \begin{equation}
+        v_2 = a_2 - \text{proj}_{q_1}(a_2) = \begin{pmatrix} 2 \\ 1 \end{pmatrix} - \begin{pmatrix} 4/5 \\ 8/5 \end{pmatrix} = \begin{pmatrix} 6/5 \\ -3/5 \end{pmatrix}
+    \end{equation}
+    \item \textbf{Demostración de ortogonalidad $q_1^T v_2 = 0$:}
+    \begin{equation}
+        q_1^T v_2 = \frac{1}{\sqrt{5}} \left[ 1 \left(\frac{6}{5}\right) + 2 \left(-\frac{3}{5}\right) \right] = \frac{1}{\sqrt{5}} \left( \frac{6}{5} - \frac{6}{5} \right) = 0 \quad (\text{Q.E.D.})
+    \end{equation}
+    \item \textbf{Normalización para obtener $q_2$:}
+    \begin{equation}
+        \|v_2\| = \sqrt{\left(\frac{6}{5}\right)^2 + \left(-\frac{3}{5}\right)^2} = \sqrt{\frac{36+9}{25}} = \sqrt{\frac{45}{25}} = \frac{3\sqrt{5}}{5} = \frac{3}{\sqrt{5}}
+    \end{equation}
+    \begin{equation}
+        q_2 = \frac{v_2}{\|v_2\|} = \frac{\sqrt{5}}{3} \begin{pmatrix} 6/5 \\ -3/5 \end{pmatrix} = \frac{1}{\sqrt{5}} \begin{pmatrix} 2 \\ -1 \end{pmatrix}
+    \end{equation}
+    \item \textbf{Verificación de base ortonormal $\{q_1, q_2\}$:}
+    \begin{equation}
+        \|q_1\| = 1, \quad \|q_2\| = 1, \quad q_1^T q_2 = \frac{1}{5} (1\cdot 2 + 2(-1)) = 0
+    \end{equation}
+\end{enumerate}
+
+\subsubsection{h) Gram-Schmidt en Matriz $3 \times 3$}
+Para la matriz:
+\begin{equation}
+    A = \begin{pmatrix}
+        1 & 1 & 1 \\
+        1 & 1 & 0 \\
+        1 & 0 & 0
+    \end{pmatrix}
+\end{equation}
+\begin{itemize}[leftmargin=*]
+    \item $a_1 = [1, 1, 1]^T \implies \|a_1\| = \sqrt{3} \implies q_1 = \frac{1}{\sqrt{3}} [1, 1, 1]^T$.
+    \item $a_2 = [1, 1, 0]^T \implies q_1^T a_2 = \frac{2}{\sqrt{3}} \implies v_2 = a_2 - \frac{2}{3}[1, 1, 1]^T = \left[\frac{1}{3}, \frac{1}{3}, -\frac{2}{3}\right]^T$. \\
+    $\|v_2\| = \frac{\sqrt{6}}{3} \implies q_2 = \frac{1}{\sqrt{6}} [1, 1, -2]^T$.
+    \item $a_3 = [1, 0, 0]^T \implies q_1^T a_3 = \frac{1}{\sqrt{3}}, \quad q_2^T a_3 = \frac{1}{\sqrt{6}}$. \\
+    $v_3 = a_3 - \frac{1}{3}[1, 1, 1]^T - \frac{1}{6}[1, 1, -2]^T = \left[\frac{1}{2}, -\frac{1}{2}, 0\right]^T$. \\
+    $\|v_3\| = \frac{1}{\sqrt{2}} \implies q_3 = \frac{1}{\sqrt{2}} [1, -1, 0]^T$.
+\end{itemize}
+
+Las matrices de la descomposición $A = QR$ son:
+\begin{equation}
+    Q = \begin{pmatrix}
+        1/\sqrt{3} & 1/\sqrt{6} & 1/\sqrt{2} \\
+        1/\sqrt{3} & 1/\sqrt{6} & -1/\sqrt{2} \\
+        1/\sqrt{3} & -2/\sqrt{6} & 0
+    \end{pmatrix}, \qquad
+    R = \begin{pmatrix}
+        \sqrt{3} & 2/\sqrt{3} & 1/\sqrt{3} \\
+        0 & \sqrt{6}/3 & 1/\sqrt{6} \\
+        0 & 0 & 1/\sqrt{2}
+    \end{pmatrix}
+\end{equation}
+
+\subsubsection{Pregunta Conceptual: Significado Geométrico de Gram-Schmidt}
+Al calcular $v_2 = a_2 - (q_1^T a_2)q_1$, se resta de $a_2$ su componente paralela a $q_1$, extrayendo exactamente la parte perpendicular. Geométricamente, purifica a $a_2$ de cualquier dependencia previa y retiene únicamente la nueva dimensión ortogonal.
+
+\subsection{Ejercicio 3: Matrices Ortogonales e Isometrías}
+Sea $Q = [q_1 \mid q_2 \mid q_3]$ con columnas ortonormales en $\mathbb{R}^3$:
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Condición de ortonormalidad:}
+    \begin{equation}
+        q_i^T q_j = \delta_{ij} = \begin{cases} 1 & \text{si } i = j \\ 0 & \text{si } i \neq j \end{cases}
+    \end{equation}
+    \item \textbf{Demostración de $Q^T Q = I$:}
+    La entrada $(i, j)$ del producto matricial es $(Q^T Q)_{ij} = q_i^T q_j = \delta_{ij}$. Por ende, $Q^T Q = I$.
+    \item \textbf{Demostración de $Q^{-1} = Q^T$:}
+    Para cualquier matriz cuadrada, si $Q^T Q = I$, por la propiedad de inversa bilateral se cumple $Q^{-1} = Q^T$.
+    \item \textbf{Demostración de conservación de norma ($\|Qx\|_2 = \|x\|_2$):}
+    \begin{equation}
+        \|Qx\|_2^2 = (Qx)^T (Qx) = x^T (Q^T Q) x = x^T I x = x^T x = \|x\|_2^2
+    \end{equation}
+    Extrayendo la raíz cuadrada positiva: $\|Qx\|_2 = \|x\|_2$.
+    \item \textbf{Significado geométrico:} Una transformación ortogonal es una \textbf{isometría rígida} (rotación, reflexión o combinación). Preserva distancias, longitudes y ángulos euclidianos.
+    \item \textbf{No amplificación de longitud:} Una matriz ortogonal \textbf{nunca puede amplificar} la longitud de un vector, pues el factor $\|Qx\|_2 / \|x\|_2 = 1$ es constante para todo $x \neq 0$. Su número de condición es $\kappa_2(Q) = 1$.
+\end{enumerate}
+
+\subsubsection{Pregunta Conceptual: Relevancia en Computación Científica}
+Las matrices ortogonales proporcionan \textbf{estabilidad numérica incondicional}. Al multiplicar por $Q$, los errores de redondeo no crecen. Además, su inversión es libre de costo y exacta mediante transposición ($Q^{-1} = Q^T$).
+
+\subsection{Ejercicio 4: Construcción de la Matriz $R$}
+A partir de la base ortonormal $\{q_1, q_2, q_3\}$:
+\begin{align*}
+    a_1 &= r_{11} q_1 \\
+    a_2 &= r_{12} q_1 + r_{22} q_2 \\
+    a_3 &= r_{13} q_1 + r_{23} q_2 + r_{33} q_3
+\end{align*}
+
+\begin{enumerate}[leftmargin=*]
+    \item $a_2$ no requiere componente en $q_3$ porque $\text{Span}(q_1, q_2) = \text{Span}(a_1, a_2)$. El vector $a_2$ está completamente contenido en dicho plano; su proyección ortogonal sobre $q_3$ es nula.
+    \item $a_3$ se expresa con $\{q_1, q_2, q_3\}$ porque este conjunto forma una base completa del espacio generado.
+    \item \textbf{Deducción de $r_{kj} = q_k^T a_j$:}
+    Multiplicando $a_j = \sum_{i=1}^j r_{ij} q_i$ por la izquierda por $q_k^T$:
+    \begin{equation}
+        q_k^T a_j = \sum_{i=1}^j r_{ij} (q_k^T q_i) = \sum_{i=1}^j r_{ij} \delta_{ki} = r_{kj} \quad (\text{para } k \le j)
+    \end{equation}
+    Si $k > j$, $q_k^T a_j = 0$.
+    \item \textbf{Estructura de $R$:}
+    \begin{equation}
+        R = \begin{pmatrix}
+            r_{11} & r_{12} & r_{13} \\
+            0 & r_{22} & r_{23} \\
+            0 & 0 & r_{33}
+        \end{pmatrix}
+    \end{equation}
+    $R$ es triangular superior porque cada columna $a_j$ solo depende de las primeras $j$ direcciones ortonormales generadas hasta ese paso.
+    \item \textbf{Verificación de $A = QR$:}
+    Por producto en bloques de matrices:
+    \begin{equation}
+        Q R = [q_1 \mid q_2 \mid q_3] \begin{pmatrix}
+            r_{11} & r_{12} & r_{13} \\
+            0 & r_{22} & r_{23} \\
+            0 & 0 & r_{33}
+        \end{pmatrix} = [r_{11}q_1 \mid r_{12}q_1 + r_{22}q_2 \mid r_{13}q_1 + r_{23}q_2 + r_{33}q_3] = A
+    \end{equation}
+\end{enumerate}
+
+\subsection{Ejercicio 5: Comparación QR vs. LU y Estabilidad Numérica}
+
+\begin{table}[h!]
+    \centering
+    \small
+    \caption{Comparativa estructural entre las factorizaciones LU y QR.}
+    \label{tab:comparativa_lu_qr}
+    \begin{tabular}{lcc}
+        \toprule
+        \textbf{Característica} & \textbf{Factorización LU} & \textbf{Factorización QR} \\
+        \midrule
+        Primer factor & $L$ (Triangular inferior unitaria) & $Q$ (Matriz ortogonal / Isometría) \\
+        Segundo factor & $U$ (Triangular superior) & $R$ (Triangular superior) \\
+        Idea principal & Eliminación gaussiana por filas & Ortogonalización por columnas \\
+        ¿Utiliza ortogonalidad? & No & Sí ($Q^T Q = I$) \\
+        ¿Conserva normas? & No (puede amplificar errores) & Sí ($\|Qx\|_2 = \|x\|_2$) \\
+        Estructura triangular & Dos factores triangulares ($L, U$) & Un factor triangular ($R$) \\
+        Costo computacional & $\approx \frac{2}{3} n^3$ FLOPs & $\approx \frac{4}{3} n^3$ FLOPs (el doble) \\
+        Aplicación típica & Sistemas cuadrados $Ax = b$ & Mínimos cuadrados, autovalores QR \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsubsection{Análisis de Perturbaciones}
+Considerando una perturbación $h$:
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Para la matriz ortogonal $Q$:}
+    \begin{equation}
+        \|Q(x+h) - Qx\|_2 = \|Qh\|_2 = \|h\|_2
+    \end{equation}
+    El error de salida es exactamente igual al de entrada (amplificación unitaria).
+    \item \textbf{Para una matriz arbitraria $A$:}
+    \begin{equation}
+        A(x+h) - Ax = Ah \implies \sigma_{\min}(A)\|h\|_2 \le \|Ah\|_2 \le \sigma_{\max}(A)\|h\|_2
+    \end{equation}
+    Si $\|Ah\|_2 > \|h\|_2$, la matriz amplifica el error por un factor acotado por su número de condición $\kappa_2(A) = \sigma_{\max} / \sigma_{\min}$. En matrices mal condicionadas, esta amplificación destruye la precisión numérica.
+\end{itemize}
+
+\subsubsection{Pregunta de Cierre: Cadena Conceptual}
+\begin{equation}
+    \boxed{\text{Base } \{a_j\}} \longrightarrow 
+    \boxed{\text{Proyección } (q_i^T a_j)q_i} \longrightarrow 
+    \boxed{\text{Gram-Schmidt}} \longrightarrow 
+    \boxed{Q \text{ (Ortonormal)}} \longrightarrow 
+    \boxed{R \text{ (Triangular)}} \longrightarrow 
+    \boxed{A = QR}
+\end{equation}
+
+\subsubsection{Reflexión Final}
+La factorización QR puede concebirse como un cambio geométrico de base: convierte las columnas originales de $A$ (que forman un sistema de coordenadas oblicuo y potencialmente deformable) en un sistema de ejes de referencia perfectamente perpendiculares y unitarios ($Q$). La matriz triangular superior $R$ almacena las proyecciones y coordenadas necesarias para reconstruir fielmente la base original.
+
+\section{Conclusiones Generales}
+\begin{enumerate}
+    \item La factorización \textbf{LU} mediante el algoritmo de Crout es altamente eficiente para resolver múltiples sistemas con la misma matriz de coeficientes, reduciendo la complejidad de $\mathcal{O}(n^3)$ a $\mathcal{O}(n^2)$ por escenario.
+    \item La factorización \textbf{PLU} introduce pivoteo parcial, siendo indispensable ante pivotes nulos o matrices generales para garantizar estabilidad numérica sin riesgo de división por cero.
+    \item La factorización \textbf{QR} constituye el método más robusto en álgebra lineal numérica al emplear transformaciones ortogonales (isometrías) que impiden la amplificación de errores de redondeo, convirtiéndose en el estándar universal para problemas de mínimos cuadrados y cálculo espectral.
+\end{enumerate}
+
+\end{document}
