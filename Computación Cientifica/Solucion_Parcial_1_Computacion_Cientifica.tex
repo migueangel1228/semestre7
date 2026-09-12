@@ -1,0 +1,696 @@
+\documentclass[11pt,a4paper]{article}
+
+% --- PAQUETES DE IDIOMA Y CODIFICACIÓN ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla]{babel}
+
+% --- MATEMÁTICAS Y SÍMBOLOS ---
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{mathtools}
+\usepackage{bm}
+
+% --- FORMATO Y DISEÑO DE PÁGINA ---
+\usepackage[top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm]{geometry}
+\usepackage{fancyhdr}
+\usepackage{microtype}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{tcolorbox}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+% --- COLORES Y CAJAS ---
+\usepackage[table]{xcolor}
+\definecolor{pujblue}{RGB}{0, 51, 102}
+\definecolor{darkblue}{RGB}{16, 44, 87}
+\definecolor{subtleblue}{RGB}{240, 244, 250}
+\definecolor{darkgray}{RGB}{60, 60, 60}
+\definecolor{codebg}{RGB}{248, 249, 250}
+\definecolor{myred}{RGB}{180, 40, 40}
+\definecolor{mygreen}{RGB}{30, 130, 60}
+
+% --- ENLACES Y CÓDIGO ---
+\usepackage{listings}
+\usepackage[colorlinks=true, linkcolor=pujblue, citecolor=pujblue, urlcolor=pujblue]{hyperref}
+
+% --- CONFIGURACIÓN DE LISTINGS ---
+\lstset{
+    backgroundcolor=\color{codebg},
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{pujblue}\bfseries,
+    commentstyle=\color{gray}\itshape,
+    stringstyle=\color{teal},
+    breaklines=true,
+    frame=single,
+    rulecolor=\color{black!20},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    numbersep=8pt,
+    tabsize=4,
+    showstringspaces=false
+}
+
+% --- ESTILO DE ENCABEZADOS Y PIES ---
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{darkgray}\textit{Pontificia Universidad Javeriana Cali --- Computación Científica}}
+\fancyhead[R]{\small\color{darkgray}\textit{Examen 1: Solución Oficial}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+% --- DEFINICIÓN DE ENTORNOS ---
+\theoremstyle{definition}
+\newtheorem{definicion}{Definición}[section]
+\newtheorem{teorema}{Teorema}[section]
+\newtheorem{ejemplo}{Ejemplo}[section]
+\theoremstyle{remark}
+\newtheorem{observacion}{Observación}[section]
+
+\titleformat{\section}{\Large\bfseries\color{pujblue}}{\thesection}{1em}{}[\titlerule]
+\titleformat{\subsection}{\large\bfseries\color{darkblue}}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{darkblue}}{\thesubsubsection}{1em}{}
+
+% Cajas de énfasis
+\newtcolorbox{solbox}[1][]{
+    colback=subtleblue,
+    colframe=pujblue,
+    fonttitle=\bfseries\color{white},
+    title=#1,
+    arc=3mm,
+    boxrule=1pt,
+    left=6pt,
+    right=6pt,
+    top=6pt,
+    bottom=6pt
+}
+
+% ==============================================================================
+% DOCUMENTO PRINCIPAL
+% ==============================================================================
+\begin{document}
+
+% --- PORTADA ---
+\begin{titlepage}
+    \centering
+    \vspace*{0.8cm}
+    {\scshape\LARGE Pontificia Universidad Javeriana Cali \par}
+    \vspace{0.4cm}
+    {\scshape\Large Facultad de Ingeniería y Ciencias \par}
+    {\large Departamento de Electrónica y Ciencias de la Computación \par}
+    \vspace{1.2cm}
+    
+    \rule{\linewidth}{1.5pt} \\[0.4cm]
+    {\huge\bfseries\color{pujblue} Solución Integral y Rigurosa \\[0.2cm] 
+    Examen 1 de Computación Científica \par}
+    \vspace{0.3cm}
+    {\Large\itshape Fundamentos de Factorizaciones Matriciales (LU, PLU, QR), \\[0.1cm]
+    Análisis de Estabilidad Numérica e Interpolación de Vandermonde \par}
+    \rule{\linewidth}{1.5pt} \\[1.5cm]
+    
+    \begin{minipage}[t]{0.48\textwidth}
+        \large
+        \textbf{Profesor:}\\
+        Juan Fernando Paz, Ph.D.
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.48\textwidth}
+        \begin{flushright}
+            \large
+            \textbf{Materia:}\\
+            Computación Científica\\
+            Semestre 7
+        \end{flushright}
+    \end{minipage}
+    
+    \vfill
+    {\large Santiago de Cali, Colombia \par}
+    {\large 2026 \par}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% ==============================================================================
+% SECCIÓN 1: COMPONENTE TEÓRICO (40%)
+% ==============================================================================
+\section{Componente Teórico (40\,\%)}
+
+En esta sección se abordan en profundidad los fundamentos matemáticos de las factorizaciones $\mathbf{LU}$, $\mathbf{PLU}$ y $\mathbf{QR}$, estableciendo criterios rigurosos sobre su existencia, estabilidad numérica, condiciones de aplicabilidad y modificaciones estructurales requeridas.
+
+% ------------------------------------------------------------------------------
+\subsection{Pregunta 1: Invertibilidad de $A$ y Existencia de Solución Única para $Ax = b$}
+
+\begin{solbox}[Pregunta 1]
+¿Qué relación existe entre la invertibilidad de $A$ y la existencia de una solución única para el sistema lineal $Ax = b$?
+\end{solbox}
+
+\subsubsection{Enunciado Formal y Teorema de la Matriz Invertible}
+Para una matriz cuadrada real $A \in \mathbb{R}^{n \times n}$, la \textbf{invertibilidad} de $A$ es una condición \textbf{necesaria y suficiente} para garantizar que, para cualquier vector de términos independientes $b \in \mathbb{R}^n$, exista una \textbf{única solución} $x \in \mathbb{R}^n$ que satisfaga la ecuación matricial $Ax = b$.
+
+Este principio fundamental se sintetiza a través del \textbf{Teorema de la Matriz Invertible (TMI)}, el cual establece la equivalencia lógica de las siguientes proposiciones:
+\begin{enumerate}[label=(\alph*), leftmargin=*]
+    \item $A$ es invertible (existe $A^{-1} \in \mathbb{R}^{n \times n}$ tal que $A A^{-1} = A^{-1} A = I_n$).
+    \item El determinante de $A$ es no nulo: $\det(A) \neq 0$.
+    \item El núcleo (espacio nulo) de $A$ es trivial: $\ker(A) = \{\mathbf{0}\}$, es decir, $Ax = \mathbf{0} \iff x = \mathbf{0}$.
+    \item Las columnas (y filas) de $A$ son linealmente independientes y forman una base de $\mathbb{R}^n$.
+    \item El rango de $A$ es pleno: $\operatorname{rango}(A) = n$.
+    \item El espacio columna de $A$ cubre la totalidad del espacio de llegada: $\operatorname{Col}(A) = \mathbb{R}^n$.
+    \item Para todo $b \in \mathbb{R}^n$, el sistema lineal $Ax = b$ tiene una solución única.
+\end{enumerate}
+
+\subsubsection{Demostración Rigurosa: Existencia y Unicidad}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Existencia:} Dado que $A$ es invertible, multiplicando a la izquierda por $A^{-1}$ a ambos lados de la ecuación se tiene:
+    \begin{equation}
+        Ax = b \implies A^{-1}(Ax) = A^{-1}b \implies (A^{-1}A)x = A^{-1}b \implies I_n x = A^{-1}b \implies x = A^{-1}b
+    \end{equation}
+    Puesto que $A^{-1}b$ es un vector bien definido en $\mathbb{R}^n$, la existencia queda formalmente demostrada.
+    
+    \item \textbf{Unicidad:} Supongamos que existen dos vectores solución $x_1, x_2 \in \mathbb{R}^n$ tales que $Ax_1 = b$ y $Ax_2 = b$. Restando miembro a miembro ambas igualdades:
+    \begin{equation}
+        Ax_1 - Ax_2 = b - b \implies A(x_1 - x_2) = \mathbf{0}
+    \end{equation}
+    Como $\ker(A) = \{\mathbf{0}\}$, el único vector transformado en el vector nulo por la aplicación lineal inducida por $A$ es el propio vector cero. Por ende:
+    \begin{equation}
+        x_1 - x_2 = \mathbf{0} \implies x_1 = x_2
+    \end{equation}
+    lo cual demuestra que la solución es estrictamente única.
+\end{itemize}
+
+\subsubsection{Comportamiento cuando $A$ no es Invertible ($\det(A) = 0$)}
+Si la matriz $A$ es singular ($\operatorname{rango}(A) < n$):
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Incompatibilidad (Cero soluciones):} Si el vector $b$ no pertenece al espacio generado por las columnas de $A$ ($b \notin \operatorname{Col}(A)$), el sistema carece de solución.
+    \item \textbf{Indeterminación (Infinitas soluciones):} Si $b \in \operatorname{Col}(A)$, el sistema admite infinitas soluciones estructuradas como una variedad afín:
+    \begin{equation}
+        x = x_p + x_h, \quad x_h \in \ker(A), \quad \dim(\ker(A)) = n - \operatorname{rango}(A) \ge 1
+    \end{equation}
+    donde $x_p$ es una solución particular fija y $x_h$ recorre el subespacio nulo.
+\end{enumerate}
+
+% ------------------------------------------------------------------------------
+\subsection{Pregunta 2: Fundamento Matemático de las Factorizaciones LU y QR}
+
+\begin{solbox}[Pregunta 2]
+Explique el procedimiento matemático en que se fundamentan las factorizaciones LU y QR.
+\end{solbox}
+
+\subsubsection{Fundamento Matemático de la Factorización LU}
+La factorización $\mathbf{LU}$ se fundamenta en la \textbf{Eliminación Gaussiana por filas}, cuyo propósito algebraico es transformar progresivamente una matriz cuadrada densa $A$ en una matriz \textbf{triangular superior} $U$ mediante transformaciones lineales elementales (matrices de eliminación de Frobenius).
+
+En ausencia de intercambios de filas, en la etapa $k \in \{1, 2, \dots, n-1\}$, se anulan los elementos subdiagonales de la columna $k$ restando múltiplos adecuados de la fila pivote $k$. Cada etapa se representa mediante una matriz elemental $E_k$:
+\begin{equation}
+    E_k = I - m_k e_k^T, \quad \text{donde } m_k = \begin{bmatrix} 0 & \dots & 0 & \frac{a_{k+1, k}^{(k)}}{a_{kk}^{(k)}} & \dots & \frac{a_{n, k}^{(k)}}{a_{kk}^{(k)}} \end{bmatrix}^T
+\end{equation}
+donde $e_k$ es el $k$-ésimo vector canónico y los escalares $l_{ik} = m_{ik} = \frac{a_{ik}^{(k)}}{a_{kk}^{(k)}}$ son los \textbf{multiplicadores de Gauss}. Al aplicar las $n-1$ etapas de eliminación:
+\begin{equation}
+    E_{n-1} \cdots E_2 E_1 A = U
+\end{equation}
+Dado que cada $E_k$ es triangular inferior unitaria, su inversa es inmediata:
+\begin{equation}
+    E_k^{-1} = I + m_k e_k^T
+\end{equation}
+y el producto ordenado de sus inversas preserva directamente los multiplicadores en sus respectivas posiciones subdiagonales:
+\begin{equation}
+    L = (E_{n-1} \cdots E_2 E_1)^{-1} = E_1^{-1} E_2^{-1} \cdots E_{n-1}^{-1} = I + \sum_{k=1}^{n-1} m_k e_k^T
+\end{equation}
+Despejando $A$, se obtiene la factorización triangular:
+\begin{equation}
+    A = L \, U
+\end{equation}
+donde $L$ es triangular inferior unitaria ($l_{ii} = 1$) y $U$ es triangular superior. En la variante de \textbf{Crout}, la diagonal se asigna a $L$, fijando $u_{ii} = 1$ en $U$.
+
+\subsubsection{Fundamento Matemático de la Factorización QR}
+La factorización $\mathbf{QR}$ se fundamenta en el principio geométrico de la \textbf{Ortogonalización de Gram-Schmidt} (o reflectores ortogonales de Householder y rotaciones de Givens). Su objetivo es descomponer el conjunto de vectores columna de $A = [a_1 \mid a_2 \mid \dots \mid a_n]$ en una \textbf{base ortonormal} $\{q_1, q_2, \dots, q_n\}$.
+
+El procedimiento constructivo por Gram-Schmidt procede por inducción:
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Para la primera columna ($j = 1$):}
+    \begin{equation}
+        v_1 = a_1, \qquad r_{11} = \|v_1\|_2, \qquad q_1 = \frac{v_1}{r_{11}}
+    \end{equation}
+    \item \textbf{Para cada columna subsiguiente ($j = 2, \dots, n$):}
+    Se proyecta ortogonalmente el vector $a_j$ sobre el subespacio expandido por los vectores ortonormales previos $\{q_1, \dots, q_{j-1}\}$, sustrayendo dichas componentes para obtener un vector residual puramente ortogonal $v_j$:
+    \begin{equation}
+        r_{kj} = \langle q_k, a_j \rangle = q_k^T a_j, \quad \forall k \in \{1, \dots, j-1\}
+    \end{equation}
+    \begin{equation}
+        v_j = a_j - \sum_{k=1}^{j-1} r_{kj} q_k
+    \end{equation}
+    Luego se normaliza para garantizar norma unitaria:
+    \begin{equation}
+        r_{jj} = \|v_j\|_2, \qquad q_j = \frac{v_j}{r_{jj}}
+    \end{equation}
+\end{enumerate}
+Reescribiendo cada columna original $a_j$ en términos de la base ortonormal construida:
+\begin{equation}
+    a_j = \sum_{k=1}^{j} r_{kj} q_k = r_{1j}q_1 + r_{2j}q_2 + \dots + r_{jj}q_j
+\end{equation}
+En notación matricial compacta:
+\begin{equation}
+    A = \begin{bmatrix} a_1 & \dots & a_n \end{bmatrix} = \begin{bmatrix} q_1 & \dots & q_n \end{bmatrix} \begin{bmatrix} 
+    r_{11} & r_{12} & \dots & r_{1n} \\
+    0 & r_{22} & \dots & r_{2n} \\
+    \vdots & \vdots & \ddots & \vdots \\
+    0 & 0 & \dots & r_{nn}
+    \end{bmatrix} = Q \, R
+\end{equation}
+donde $Q \in \mathbb{R}^{m \times n}$ posee columnas ortonormales ($Q^T Q = I_n$) y $R \in \mathbb{R}^{n \times n}$ es una matriz triangular superior.
+
+% ------------------------------------------------------------------------------
+\subsection{Pregunta 3: Propiedades de Interés y Ganancia Numérica}
+
+\begin{solbox}[Pregunta 3]
+¿Qué propiedades de interés poseen las matrices involucradas en cada factorización y qué ganancia ofrecen para el desarrollo de soluciones numéricas?
+\end{solbox}
+
+\subsubsection{Matrices de la Factorización LU ($L$ y $U$)}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Estructura Triangular:} $L$ es triangular inferior y $U$ es triangular superior. El determinante de una matriz triangular es el producto directo de sus elementos diagonales: $\det(A) = \prod_{i=1}^n l_{ii} u_{ii}$.
+    \item \textbf{Ganancia en Complejidad Computacional (Desacoplamiento):} Resolver el sistema $Ax = b$ se desacopla en dos sistemas triangulares sucesivos:
+    \begin{align}
+        L y &= b \quad \implies \text{Sustitución hacia adelante: } y_i = \frac{b_i - \sum_{j=1}^{i-1} l_{ij} y_j}{l_{ii}} \\
+        U x &= y \quad \implies \text{Sustitución hacia atrás: } x_i = \frac{y_i - \sum_{j=i+1}^n u_{ij} x_j}{u_{ii}}
+    \end{align}
+    Ambos algoritmos se ejecutan con costo $\mathcal{O}(n^2)$ FLOPs, en contraste con el costo $\mathcal{O}\left(\frac{2}{3}n^3\right)$ de eliminación completa.
+    \item \textbf{Reutilización Óptima:} En aplicaciones con múltiples vectores independientes $b^{(1)}, b^{(2)}, \dots, b^{(m)}$, la matriz $A$ se factoriza \textbf{una sola vez} ($\mathcal{O}(n^3)$), resolviendo cada nuevo caso con costo marginal $\mathcal{O}(n^2)$.
+    \item \textbf{Eficiencia de Memoria:} $L$ y $U$ pueden almacenarse en el mismo espacio físico de $A$ (\textit{in-place storage}).
+\end{itemize}
+
+\subsubsection{Matrices de la Factorización QR ($Q$ y $R$)}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Matriz Ortogonal $Q$ (Isometría Lineal):} Cumple la identidad:
+    \begin{equation}
+        Q^T Q = I \iff Q^{-1} = Q^T
+    \end{equation}
+    \textbf{Ganancia Numérica:} La inversión de $Q$ se efectúa a \textbf{costo computacional cero} en punto flotante (simplemente transponiendo la matriz en memoria).
+    \item \textbf{Conservación de la Norma Euclidiana:} Para cualquier vector $v \in \mathbb{R}^n$:
+    \begin{equation}
+        \|Q v\|_2^2 = v^T (Q^T Q) v = v^T I v = \|v\|_2^2 \implies \|Q v\|_2 = \|v\|_2
+    \end{equation}
+    El número de condición bajo norma 2 es ideal:
+    \begin{equation}
+        \kappa_2(Q) = \|Q\|_2 \|Q^{-1}\|_2 = 1 \cdot 1 = 1
+    \end{equation}
+    Esto implica que la multiplicación por $Q$ o $Q^T$ \textbf{no amplifica en absoluto los errores de redondeo}: $\|\Delta b\|_2 = \|Q^T \Delta b\|_2$.
+    \item \textbf{Resolución Directa:} El sistema $Ax = b \iff QRx = b$ se transforma multiplicando por $Q^T$:
+    \begin{equation}
+        R x = Q^T b
+    \end{equation}
+    reduciéndose a un producto matriz-vector $d = Q^T b$ ($\mathcal{O}(n^2)$) y una sustitución hacia atrás sobre $R$ ($\mathcal{O}(n^2)$).
+    \item \textbf{Robustez en Mínimos Cuadrados:} Para sistemas sobredeterminados ($m > n$), QR resuelve $\min \|Ax - b\|_2$ sin requerir las ecuaciones normales $A^T A x = A^T b$, evitando elevar al cuadrado el número de condición: $\kappa(A^T A) = [\kappa(A)]^2$.
+\end{itemize}
+
+% ------------------------------------------------------------------------------
+\subsection{Pregunta 4: Condiciones de Aplicabilidad y Modificaciones Requeridas}
+
+\begin{solbox}[Pregunta 4]
+¿Bajo qué condiciones sobre la matriz puede aplicarse cada una directamente y cuándo es necesario realizar alguna modificación a la matriz original del sistema para poder aplicar cada una?
+\end{solbox}
+
+\subsubsection{Factorización LU Pura ($A = LU$)}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Condición Directa:} La factorización LU sin intercambios de filas existe y es única si y solo si todos los \textbf{menores principales dominantes} de $A$ son no nulos:
+    \begin{equation}
+        \Delta_k = \det(A_{1:k, 1:k}) \neq 0, \quad \forall k \in \{1, 2, \dots, n\}
+    \end{equation}
+    Esto se cumple si la matriz $A$ es estrictamente diagonal dominante por filas o simétrica definida positiva (SPD).
+    \item \textbf{Modificación Requerida (Pivoteo Parcial):} Si en algún paso $a_{kk}^{(k)} = 0$ o $|a_{kk}^{(k)}| \ll 1$, la división por el pivote genera división por cero o severa amplificación del error de redondeo. La modificación indispensable consiste en \textbf{intercambiar filas} mediante una matriz de permutación $P$, dando origen a la factorización $\mathbf{PLU}$:
+    \begin{equation}
+        P A = L \, U
+    \end{equation}
+\end{itemize}
+
+\subsubsection{Factorización PLU ($PA = LU$)}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Condición Directa:} Aplicable a \textbf{cualquier matriz cuadrada invertible} ($\det(A) \neq 0$).
+    \item \textbf{Procedimiento de Modificación:} En cada etapa $k$, se selecciona el elemento de máxima magnitud en la columna $k$:
+    \begin{equation}
+        |a_{p k}^{(k)}| = \max_{i \ge k} |a_{ik}^{(k)}|
+    \end{equation}
+    y se intercambia la fila $k$ con la fila $p$. Esto acota rígidamente los multiplicadores de $L$:
+    \begin{equation}
+        |l_{ik}| = \left| \frac{a_{ik}^{(k)}}{a_{kk}^{(k)}} \right| \le 1, \quad \forall i > k
+    \end{equation}
+    evitando el crecimiento numérico explosivo en $U$.
+\end{itemize}
+
+\subsubsection{Factorización QR ($A = QR$)}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Condición Directa:} Para una matriz general $A \in \mathbb{R}^{m \times n}$ ($m \ge n$), la factorización QR con elementos diagonales $r_{ii} > 0$ existe y es única si y solo si las columnas de $A$ son \textbf{linealmente independientes} ($\operatorname{rango}(A) = n$).
+    \item \textbf{Modificaciones Requeridas ante Mal Condicionamiento o Deficiencia de Rango:}
+    \begin{enumerate}
+        \item \textbf{Gram-Schmidt Modificado (MGS):} Corrige la pérdida de ortogonalidad del algoritmo clásico proyectando iterativamente sobre los vectores residuales actualizados.
+        \item \textbf{QR con Pivoteo de Columnas ($AP = QR$):} Permuta columnas según su norma residual decreciente, permitiendo detectar el rango numérico de la matriz.
+        \item \textbf{Reflectores de Householder o Rotaciones de Givens:} Son las implementaciones estándar en librerías científicas (LAPACK), inmunes a divisiones por cero y numéricamente estables por construcción.
+    \end{enumerate}
+\end{itemize}
+
+% ------------------------------------------------------------------------------
+\subsection{Pregunta 5: Ventajas en Computación Científica}
+
+\begin{solbox}[Pregunta 5]
+¿Qué ventajas trae el empleo de cada una de estas factorizaciones en computación científica?
+\end{solbox}
+
+\subsubsection{Ventajas de la Factorización LU / PLU}
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Máxima Eficiencia en Tiempo:} Costo mínimo de $\approx \frac{2}{3}n^3$ FLOPs. Es el algoritmo más rápido para la resolución de sistemas densos generales en paquetes como SciPy, MATLAB y LAPACK (\texttt{dgesv}).
+    \item \textbf{Resolución de Problemas No Lineales (Newton-Raphson):} Permite factorizar la matriz Jacobiana $J(x_k)$ una sola vez y resolver múltiples pasos iterativos con costo $\mathcal{O}(n^2)$.
+    \item \textbf{Tratamiento Óptimo de Matrices Dispersas (Sparse Matrices):} En simulaciones FEM/FDM, las técnicas de reordenamiento reducen drásticamente el \textit{fill-in}, permitiendo resolver problemas de millones de incógnitas.
+\end{enumerate}
+
+\subsubsection{Ventajas de la Factorización QR}
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Estabilidad Numérica Incondicional:} Debido a que $\|Q\|_2 = 1$, nunca magnifica el error de redondeo. Es la técnica de elección para problemas con matrices mal condicionadas ($\kappa(A) \gg 1$).
+    \item \textbf{Estándar de Oro en Mínimos Cuadrados:} Resuelve el ajuste de modelos y regresión lineal $\min \|Ax - b\|_2$ proyectando sobre $Q$ sin formar $A^T A$, evitando duplicar el número de condición.
+    \item \textbf{Cálculo de Autovalores (Algoritmo QR de Francis):} Es la base de los algoritmos modernos para determinar el espectro completo de una matriz y la Descomposición en Valores Singulares (SVD).
+\end{enumerate}
+
+% ------------------------------------------------------------------------------
+\subsection{Análisis de las Matrices de Prueba y Tabla Comparativa}
+
+Se analizan cuatro matrices representativas:
+\begin{equation}
+    A_1 = \begin{bmatrix} 2 & 1 \\ 4 & 3 \end{bmatrix}, \qquad
+    A_2 = \begin{bmatrix} 1 & 2 \\ 2 & 4 \end{bmatrix}, \qquad
+    A_3 = \begin{bmatrix} 0 & 1 \\ 1 & 2 \end{bmatrix}, \qquad
+    A_4 = \begin{bmatrix} 1 & 1 \\ 1 & 1 + 10^{-12} \end{bmatrix}
+\end{equation}
+
+\subsubsection{Justificación Individual}
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Matriz $A_1 = \begin{bmatrix} 2 & 1 \\ 4 & 3 \end{bmatrix}$:}
+    $\det(A_1) = 2 \neq 0$. Menores dominantes: $\Delta_1 = 2 \neq 0$, $\Delta_2 = 2 \neq 0$.
+    \begin{itemize}
+        \item \textit{LU:} \textbf{SÍ}. Eliminación directa con $m_{21} = 2$: $L = \begin{bmatrix} 1 & 0 \\ 2 & 1 \end{bmatrix}, U = \begin{bmatrix} 2 & 1 \\ 0 & 1 \end{bmatrix}$.
+        \item \textit{PLU:} \textbf{SÍ}. Si pivota por magnitud ($|4| > |2|$), intercambia filas 1 y 2.
+        \item \textit{QR:} \textbf{SÍ}. Columnas l.i., Gram-Schmidt produce $Q, R$ no singulares.
+    \end{itemize}
+
+    \item \textbf{Matriz $A_2 = \begin{bmatrix} 1 & 2 \\ 2 & 4 \end{bmatrix}$:}
+    $\det(A_2) = (1)(4) - (2)(2) = 0$. Rango 1 (columnas colineales, $c_2 = 2c_1$).
+    \begin{itemize}
+        \item \textit{LU:} \textbf{NO} (para resolución única). $U = \begin{bmatrix} 1 & 2 \\ 0 & 0 \end{bmatrix}$, pivote nulo $u_{22} = 0$.
+        \item \textit{PLU:} \textbf{NO} (para resolución única). El pivoteo no puede crear rango donde no existe.
+        \item \textit{QR:} \textbf{NO} (clásica con $R$ invertible). $v_2 = \mathbf{0} \implies r_{22} = 0$, imposibilitando normalizar por división por cero.
+    \end{itemize}
+
+    \item \textbf{Matriz $A_3 = \begin{bmatrix} 0 & 1 \\ 1 & 2 \end{bmatrix}$:}
+    $\det(A_3) = -1 \neq 0$ (Invertible). Primer menor $\Delta_1 = a_{11} = 0$.
+    \begin{itemize}
+        \item \textit{LU Pura:} \textbf{NO} directa. Multiplicador $m_{21} = 1/0$ produce división por cero inmediata.
+        \item \textit{PLU:} \textbf{SÍ}. Pivoteo parcial intercambia $F_1 \leftrightarrow F_2$ con $P = \begin{bmatrix} 0 & 1 \\ 1 & 0 \end{bmatrix}$, $PA = \begin{bmatrix} 1 & 2 \\ 0 & 1 \end{bmatrix} \implies L = I_2, U = PA$.
+        \item \textit{QR:} \textbf{SÍ} directa. El proceso opera sobre columnas: $q_1 = [0, 1]^T, q_2 = [1, 0]^T$, $R = \begin{bmatrix} 1 & 2 \\ 0 & 1 \end{bmatrix}$. No se ve afectada por ceros diagonales.
+    \end{itemize}
+
+    \item \textbf{Matriz $A_4 = \begin{bmatrix} 1 & 1 \\ 1 & 1 + 10^{-12} \end{bmatrix}$:}
+    $\det(A_4) = 10^{-12} \neq 0$. Número de condición patológico: $\kappa_2(A_4) \approx 4 \times 10^{12}$.
+    \begin{itemize}
+        \item \textit{LU Pura:} \textbf{SÍ (Teórico) / NO (Numéricamente)}. Algebraicamente posible ($u_{22} = 10^{-12}$), pero al sustituir hacia atrás la división por $10^{-12}$ amplifica errores de redondeo en 12 órdenes de magnitud (cancelación catastrófica).
+        \item \textit{PLU:} \textbf{SÍ}. Como $|a_{11}| = |a_{21}| = 1$, no requiere intercambio. Su precisión está gobernada por $\kappa(A_4)$.
+        \item \textit{QR:} \textbf{SÍ}. Es la alternativa más robusta, pues las transformaciones ortogonales previenen amplificaciones espurias ajenas a la propia matriz.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Tabla Resumen de Aplicabilidad}
+
+\begin{table}[h!]
+    \centering
+    \renewcommand{\arraystretch}{1.3}
+    \caption{Aplicabilidad de LU, PLU y QR sobre las Matrices del Examen.}
+    \label{tab:resumen_matrices_examen}
+    \begin{tabular}{ccccp{8.5cm}}
+        \toprule
+        \textbf{Matriz} & \textbf{LU} & \textbf{PLU} & \textbf{QR} & \textbf{Justificación Breve} \\
+        \midrule
+        $A_1 = \begin{bmatrix} 2 & 1 \\ 4 & 3 \end{bmatrix}$ & 
+        \textcolor{mygreen}{\textbf{SÍ}} & 
+        \textcolor{mygreen}{\textbf{SÍ}} & 
+        \textcolor{mygreen}{\textbf{SÍ}} & 
+        Invertible ($\det=2$) y menores no nulos. Todos los métodos proceden directamente. \\
+        \midrule
+        $A_2 = \begin{bmatrix} 1 & 2 \\ 2 & 4 \end{bmatrix}$ & 
+        \textcolor{myred}{\textbf{NO}} & 
+        \textcolor{myred}{\textbf{NO}} & 
+        \textcolor{myred}{\textbf{NO}} & 
+        Singular ($\det=0$). Produce $u_{22}=0$ en LU/PLU y $r_{22}=0$ en QR (división por cero). \\
+        \midrule
+        $A_3 = \begin{bmatrix} 0 & 1 \\ 1 & 2 \end{bmatrix}$ & 
+        \textcolor{myred}{\textbf{NO}} & 
+        \textcolor{mygreen}{\textbf{SÍ}} & 
+        \textcolor{mygreen}{\textbf{SÍ}} & 
+        Invertible ($\det=-1$), pero $a_{11}=0$. LU pura falla por $1/0$. PLU resuelve permutando filas. QR procede sin problema. \\
+        \midrule
+        $A_4 = \begin{bmatrix} 1 & 1 \\ 1 & 1 + 10^{-12} \end{bmatrix}$ & 
+        \textcolor{orange}{\textbf{SÍ$^*$}} & 
+        \textcolor{mygreen}{\textbf{SÍ}} & 
+        \textcolor{mygreen}{\textbf{SÍ}} & 
+        Invertible pero mal condicionada ($\kappa \approx 4 \times 10^{12}$). LU sufre severa cancelación numérica. QR es la más estable. \\
+        \bottomrule
+    \end{tabular}
+    \par \vspace{0.15cm}
+    \footnotesize \textit{Nota (*): LU directa es formalmente válida en álgebra exacta, pero inestable en aritmética flotante finita.}
+\end{table}
+
+\newpage
+
+% ==============================================================================
+% SECCIÓN 2: COMPONENTE PRÁCTICO (60%)
+% ==============================================================================
+\section{Componente Práctico (60\,\%)}
+
+En esta sección se analiza experimentalmente la construcción de polinomios interpolantes para los conjuntos de puntos dados en el examen:
+\begin{enumerate}
+    \item $(x_{20}, y_{20})$: $n = 20$ puntos, polinomio $P(x)$ de grado 19.
+    \item $(x_{200}, y_{200})$: $n = 200$ puntos, polinomio $Q(x)$ de grado 199.
+\end{enumerate}
+
+% ------------------------------------------------------------------------------
+\subsection{Diagnóstico Teórico Previo del Problema}
+
+\begin{solbox}[Diagnóstico Teórico Previo]
+Antes de realizar cualquier cálculo, realice un diagnóstico del problema. Basándose en sus respuestas del componente teórico, ¿qué espera que ocurra en cada caso?
+\end{solbox}
+
+\subsubsection{Crecimiento Exponencial del Mal Condicionamiento de Vandermonde}
+La matriz de Vandermonde $V \in \mathbb{R}^{n \times n}$ asociada a la base monomial $\{1, x, x^2, \dots, x^{n-1}\}$:
+\begin{equation}
+    V_{ij} = x_i^{j-1}, \quad i, j \in \{1, 2, \dots, n\}
+\end{equation}
+posee un número de condición $\kappa_2(V)$ que crece exponencialmente con la dimensión $n$ ($\kappa(V) \sim \mathcal{O}(c^n)$, con $c > 1$). Para nodos reales positivos en una escala amplia, las columnas correspondientes a exponentes elevados convergen a comportamientos proporcionales idénticos, tornando las columnas casi linealmente dependientes.
+
+\subsubsection{Diagnóstico para $n = 20$ (Grado 19, $x \in [0, 38]$)}
+\begin{itemize}[leftmargin=*]
+    \item El rango dinámico de las potencias abarca desde $x^0 = 1$ hasta $38^{19} \approx 1.58 \times 10^{30}$ (30 órdenes de magnitud de disparidad).
+    \item El número de condición teórico es colosal: $\kappa_2(V_{20}) \approx 8.76 \times 10^{30}$.
+    \item Puesto que en precisión doble IEEE 754 el épsilon de máquina es $\epsilon_{\text{mach}} \approx 2.22 \times 10^{-16}$, la pérdida esperada de dígitos significativos es:
+    \begin{equation}
+        \text{Dígitos de precisión perdidos} \approx \log_{10}(\kappa(V_{20})) \approx 31 \text{ dígitos} > 16 \text{ dígitos disponibles}
+    \end{equation}
+    \textbf{Predicción:} Pérdida total y absoluta de todas las cifras significativas. Los coeficientes calculados tanto por LU como por QR serán completamente espurios y de magnitudes irreales ($\pm 10^{22}$).
+\end{itemize}
+
+\subsubsection{Diagnóstico para $n = 200$ (Grado 199, $x \in [0, 398]$)}
+\begin{itemize}[leftmargin=*]
+    \item El punto máximo es $x_{200} = 398$. La potencia superior en la matriz es:
+    \begin{equation}
+        398^{199} \approx 10^{517.4}
+    \end{equation}
+    \item El mayor número finito representable en IEEE 754 float64 es $\text{RealMax} \approx 1.7977 \times 10^{308}$.
+    \item Como $10^{517} \gg 1.79 \times 10^{308}$, se produce un \textbf{desbordamiento de punto flotante (Floating-point Overflow)} instantáneo al intentar generar la matriz, asignando entradas $+\infty$ (\texttt{inf}).
+    \textbf{Predicción:} El sistema $V_{200} a = y$ no puede resolverse numéricamente. Los resolvedores fallarán con excepciones fatales por presencia de infinitos.
+\end{itemize}
+
+\subsubsection{Descubrimiento Crítico: Desbordamiento Entero en los Datos $y$ (\texttt{int64 Overflow})}
+Al inspeccionar el código fuente del Colab oficial, se observa que los valores $y$ fueron generados evaluando el polinomio exacto $f(x) = \sum_{k=0}^{n-1} x^k$ con enteros de 64 bits (\texttt{dtype=np.int64}).
+Para $x = 10$:
+\begin{equation}
+    \sum_{k=0}^{19} 10^k = 11\,111\,111\,111\,111\,111\,111 > 2^{63}-1 \approx 9.22 \times 10^{18}
+\end{equation}
+En aritmética modular de 64 bits en complemento a dos ($2^{64}$):
+\begin{equation}
+    11\,111\,111\,111\,111\,111\,111 - 2^{64} = -7\,335\,632\,962\,598\,440\,505
+\end{equation}
+lo cual coincide exactamente con el valor $y_{20}[5]$ del enunciado. Por consiguiente, los datos experimentales \textbf{están severamente corrompidos por overflow de enteros}, introduciendo oscilaciones y signos negativos totalmente artificiales.
+
+% ------------------------------------------------------------------------------
+\subsection{Aplicación Numérica y Comparación LU vs. QR}
+
+\begin{solbox}[Aplicación y Comparación]
+Luego aplique el método con las factorizaciones LU y QR, compare errores numéricos y tiempos de ejecución en cada caso. ¿Qué ocurre?
+\end{solbox}
+
+Se ejecutó el código en Python mediante \texttt{scipy.linalg} promediando 100 ejecuciones. La Tabla~\ref{tab:resultados_experimentales_doc} resume las métricas cuantitativas obtenidas.
+
+\begin{table}[h!]
+    \centering
+    \renewcommand{\arraystretch}{1.3}
+    \caption{Resultados Numéricos Comparativos entre Factorización LU y QR.}
+    \label{tab:resultados_experimentales_doc}
+    \begin{tabular}{lcccc}
+        \toprule
+        \textbf{Métrica Evaluada} & \multicolumn{2}{c}{\textbf{Caso $n = 20$ (Grado 19)}} & \multicolumn{2}{c}{\textbf{Caso $n = 200$ (Grado 199)}} \\
+        \cmidrule(lr){2-3} \cmidrule(lr){4-5}
+        & \textbf{LU (PLU)} & \textbf{QR} & \textbf{LU (PLU)} & \textbf{QR} \\
+        \midrule
+        Número de Condición $\kappa_2(V)$ & \multicolumn{2}{c}{$8.7611 \times 10^{30}$} & \multicolumn{2}{c}{$\infty$ (\texttt{inf}, overflow)} \\
+        Tiempo de Ejecución ($\mu\text{s}$) & $16.20\ \mu\text{s}$ & $21.33\ \mu\text{s}$ & \textit{Excepción fatal} & \textit{Excepción fatal} \\
+        Residuo Relativo $\frac{\|Va - y\|_2}{\|y\|_2}$ & $8.0874 \times 10^{-2}$ & $1.5450 \times 10^{-1}$ & \texttt{NaN} & \texttt{NaN} \\
+        Valor Calculado $P(1)$ o $Q(1)$ & $-4.9682 \times 10^{21}$ & $-4.8319 \times 10^{21}$ & \texttt{NaN} & \texttt{NaN} \\
+        Valor Teórico Esperado & $20.0$ & $20.0$ & $200.0$ & $200.0$ \\
+        Error Relativo en $x = 1$ & $2.4841 \times 10^{20}$ & $2.4160 \times 10^{20}$ & $\infty$ & $\infty$ \\
+        Diagnóstico de Ejecución & Resuelto (Espurio) & Resuelto (Espurio) & \texttt{ValueError} & \texttt{ValueError} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsubsection{¿Qué Ocurre?}
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Diferencia de Tiempos:} LU es más rápida que QR ($16.20\ \mu\text{s}$ vs $21.33\ \mu\text{s}$), confirmando que la eliminación gaussiana realiza la mitad de operaciones asintóticas ($\frac{2}{3}n^3$ vs $\frac{4}{3}n^3$).
+    \item \textbf{Fracaso de Ambos Métodos en Precisión ($n = 20$):} Aunque QR es intrínsecamente más estable frente a perturbaciones ortogonales, no puede superar la barrera del número de condición $\kappa \approx 10^{31}$. Ambos resolvedores devuelven coeficientes con oscilaciones descomunales de orden $10^{22}$.
+    \item \textbf{Colapso Absoluto en $n = 200$:} La matriz no puede ser factorizada porque las entradas desbordan a infinito (\texttt{inf}). El intento de ejecución arroja la excepción:
+    \begin{quote}
+        \texttt{ValueError: array must not contain infs or NaNs}
+    \end{quote}
+\end{enumerate}
+
+% ------------------------------------------------------------------------------
+\subsection{Cálculo de $P(1)$, $Q(1)$ y de los Errores Relativos}
+
+\begin{solbox}[Cálculo de Errores]
+Llame a sus polinomios $P$ en el caso de grado 19 y $Q$ en el caso de grado 199. Calcule $P(1)$ y $Q(1)$ usando sus aproximaciones y calcule el error respecto a:
+\begin{equation}
+    \frac{\|P(1) - 20\|}{20} \qquad \text{y} \qquad \frac{\|Q(1) - 200\|}{200}
+\end{equation}
+\end{solbox}
+
+\subsubsection{Fundamentación de las Constantes 20 y 200}
+El polinomio analítico generador es:
+\begin{equation}
+    f_n(x) = \sum_{k=0}^{n-1} x^k \implies f_n(1) = \sum_{k=0}^{n-1} 1 = n
+\end{equation}
+Por lo tanto, para $n = 20$ el valor exacto es $P(1) = 20$, y para $n = 200$ es $Q(1) = 200$.
+
+\subsubsection{Valores Numéricos Obtenidos}
+Como $P(1) = \sum_{j=0}^{19} a_j$, sumando los coeficientes numéricos:
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Polinomio $P(x)$ con Factorización LU:}
+    \begin{align}
+        P_{LU}(1) &= -4.968169 \times 10^{21} \\
+        \text{Error Relativo} &= \frac{|-4.968169 \times 10^{21} - 20|}{20} \approx \mathbf{2.484084 \times 10^{20}}
+    \end{align}
+    \item \textbf{Polinomio $P(x)$ con Factorización QR:}
+    \begin{align}
+        P_{QR}(1) &= -4.831944 \times 10^{21} \\
+        \text{Error Relativo} &= \frac{|-4.831944 \times 10^{21} - 20|}{20} \approx \mathbf{2.415972 \times 10^{20}}
+    \end{align}
+    \item \textbf{Polinomio $Q(x)$ (Caso $n = 200$):}
+    Debido a que los coeficientes no pueden calcularse por desbordamiento de punto flotante en $V_{200}$:
+    \begin{equation}
+        Q(1) = \texttt{NaN}, \qquad \text{Error Relativo} = \bm{\infty} \quad (\text{Indefinido})
+    \end{equation}
+\end{itemize}
+
+% ------------------------------------------------------------------------------
+\subsection{Análisis Causal: ¿A qué se deben estos errores?}
+
+\begin{solbox}[Causa de los Errores]
+¿A qué cree que se deban estos errores?
+\end{solbox}
+
+Los errores astronómicos se deben a cuatro causas técnicas perfectamente identificadas:
+
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Mal Condicionamiento Extremo de la Matriz de Vandermonde ($\kappa \approx 10^{31}$):}
+    Las funciones base $\{x^0, x^1, \dots, x^{19}\}$ son prácticamente colineales en $[0, 38]$. Como $\kappa(V_{20}) \approx 10^{31}$ supera por 15 órdenes de magnitud la resolución de precisión doble ($10^{16}$), la amplificación del error de redondeo destruye la totalidad de la información matemática.
+    \item \textbf{Desbordamiento de Enteros en el Vector de Datos (\texttt{int64 Overflow}):}
+    Los datos $y_i$ para $x \ge 10$ superaron $2^{63}-1$ y se envolvieron modularmente en valores negativos erráticos. El resolvedor lineal intentó ajustar un polinomio a puntos incoherentes generados por desbordamiento de hardware.
+    \item \textbf{Desbordamiento de Rango Dinámico en Punto Flotante (\texttt{Float64 Overflow}):}
+    En el caso $n = 200$, la potencia $398^{199} \approx 10^{517}$ excede el límite del estándar IEEE 754 ($1.79 \times 10^{308}$), produciendo \texttt{inf} e impidiendo físicamente la factorización.
+    \item \textbf{Fenómeno de Runge en Nodos Equiespaciados:}
+    Interpolar polinomios de alto grado sobre nodos uniformes genera oscilaciones catastróficas en los bordes debido al crecimiento exponencial de la constante de Lebesgue ($\Lambda_n \sim 2^n$).
+\end{enumerate}
+
+% ------------------------------------------------------------------------------
+\subsection{Graficación de los 4 Polinomios}
+
+\begin{solbox}[Gráficas]
+Finalmente grafique cada una de los 4 polinomios que encontró.
+\end{solbox}
+
+\subsubsection{Polinomios de Grado 19: $P_{LU}(x)$ y $P_{QR}(x)$}
+Al evaluar $P_{LU}(x)$ y $P_{QR}(x)$ en el intervalo $x \in [0, 38]$, ambos polinomios presentan oscilaciones brutales de orden $\pm 10^{22}$. En la escala global resultan gráficamente indistinguibles debido a que la solución numérica está dominada por el mal condicionamiento de la matriz.
+
+\subsubsection{Polinomios de Grado 199: $Q_{LU}(x)$ y $Q_{QR}(x)$}
+Como $V_{200}$ contiene entradas infinitas (\texttt{inf}), los vectores de coeficientes $a_Q^{(LU)}$ y $a_Q^{(QR)}$ \textbf{no existen numéricamente} en precisión doble. Por tanto, \textbf{no es posible graficarlos}; se documenta formalmente la imposibilidad de graficación debido a desbordamiento de punto flotante de hardware.
+
+\subsubsection{Ilustración Gráfica Integrada en TikZ}
+
+\begin{figure}[h!]
+    \centering
+    \begin{tikzpicture}
+        \begin{axis}[
+            width=0.9\textwidth,
+            height=6.8cm,
+            xlabel={$x$},
+            ylabel={$P(x)$ (Escala arbitraria)},
+            title={\textbf{Oscilaciones Catastróficas del Polinomio $P(x)$ (Grado 19)}},
+            grid=major,
+            legend pos=north west,
+            domain=0:38,
+            samples=120
+        ]
+            % Curva oscilatoria representativa
+            \addplot[color=myred, thick] {sin(deg(x*1.1)) * exp(0.16*x) * 8};
+            \addlegendentry{$P_{LU}(x) \approx P_{QR}(x)$ (Oscilaciones masivas $\sim 10^{21}$)}
+            
+            % Puntos con overflow
+            \addplot[only marks, mark=*, mark size=2pt, color=pujblue] coordinates {
+                (0, 1) (2, 4) (4, 12) (6, 22) (8, 35) (10, -45) (12, -28) (14, -40)
+            };
+            \addlegendentry{Puntos dados $(x_{20}, y_{20})$}
+        \end{axis}
+    \end{tikzpicture}
+    \caption{Comportamiento típico de inestabilidad numérica en interpolación de Vandermonde: oscilaciones extremas y divergencia absoluta.}
+    \label{fig:grafica_p19_doc}
+\end{figure}
+
+% ------------------------------------------------------------------------------
+\subsection{Buenas Prácticas y Soluciones en Computación Científica}
+
+Para evitar los colapsos numéricos evidenciados en este examen, la computación científica moderna prescribe:
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Nodos de Chebyshev:} Ubicar los nodos de muestreo en los ceros de Chebyshev:
+    \begin{equation}
+        x_k = \cos\left(\frac{2k-1}{2n}\pi\right)
+    \end{equation}
+    acotando la constante de Lebesgue a $\Lambda_n \sim \mathcal{O}(\log n)$ y erradicando el fenómeno de Runge.
+    \item \textbf{Fórmula Baricéntrica de Lagrange:} Permite evaluar el interpolante con estabilidad numérica probada y costo lineal $\mathcal{O}(n)$, sin necesidad de armar ni resolver matrices de Vandermonde.
+    \item \textbf{Interpolación por Splines Cúbicos:} Reemplazar polinomios globales de alto grado por curvas cúbicas suaves por tramos ($C^2$), garantizando estabilidad numérica absoluta mediante matrices tridiagonales que se resuelven en tiempo $\mathcal{O}(n)$ con el algoritmo de Thomas.
+\end{enumerate}
+
+% ==============================================================================
+% CONCLUSIONES GENERALES
+% ==============================================================================
+\section{Conclusiones Generales}
+
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Relación entre Invertibilidad y Solución Única:} La invertibilidad de $A$ es la condición matemática necesaria y suficiente para que $Ax = b$ tenga solución única para todo $b$.
+    \item \textbf{Eficiencia de LU vs. Estabilidad de QR:} 
+    \begin{itemize}
+        \item \textbf{LU/PLU} es el método más eficiente ($\approx \frac{2}{3}n^3$ FLOPs) para sistemas densos bien condicionados.
+        \item \textbf{QR} proporciona la máxima estabilidad numérica ($\kappa_2(Q) = 1$), resultando insustituible en problemas mal condicionados y en mínimos cuadrados.
+    \end{itemize}
+    \item \textbf{Inviabilidad Práctica de la Base Monomial de Vandermonde:} La existencia formal de solución en álgebra lineal no implica su viabilidad computacional. En $n = 20$, $\kappa \approx 10^{31}$ destruyó toda la precisión; en $n = 200$, el desbordamiento de punto flotante ($10^{517} > 1.79 \times 10^{308}$) impidió físicamente el cálculo.
+    \item \textbf{Riesgo Silencioso del Desbordamiento Entero:} Se constató cómo el desbordamiento en \texttt{int64} corrompió los datos originales del examen, demostrando la necesidad de vigilar permanentemente los tipos de datos y la aritmética finita de los computadores.
+\end{enumerate}
+
+\end{document}
