@@ -1,0 +1,323 @@
+\documentclass[11pt,a4paper]{article}
+
+% --- PAQUETES DE IDIOMA Y CODIFICACIÓN ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla,es-nodecimaldot,es-noshorthands]{babel}
+
+% --- MATEMÁTICAS Y SÍMBOLOS ---
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{mathtools}
+
+% --- FORMATO Y DISEÑO DE PÁGINA ---
+\usepackage[top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm]{geometry}
+\usepackage{fancyhdr}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{titlesec}
+
+% --- COLORES Y CÓDIGO ---
+\usepackage[table]{xcolor}
+\definecolor{pujblue}{RGB}{0, 51, 102}
+\definecolor{darkblue}{RGB}{16, 44, 87}
+\definecolor{codebg}{RGB}{248, 249, 250}
+\definecolor{darkgray}{RGB}{60, 60, 60}
+
+\usepackage{listings}
+\usepackage[colorlinks=true, linkcolor=pujblue, citecolor=pujblue, urlcolor=pujblue]{hyperref}
+
+% --- CONFIGURACIÓN DE LISTINGS (SOPORTE COMPLETO UTF-8 / ESPAÑOL) ---
+\lstset{
+    language=Python,
+    backgroundcolor=\color{codebg},
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{pujblue}\bfseries,
+    commentstyle=\color{gray}\itshape,
+    stringstyle=\color{teal},
+    breaklines=true,
+    frame=single,
+    rulecolor=\color{black!20},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    numbersep=8pt,
+    tabsize=4,
+    showstringspaces=false,
+    literate=
+      {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+      {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+      {ñ}{{\~n}}1 {Ñ}{{\~N}}1 {ü}{{\"u}}1 {Ü}{{\"U}}1
+      {¿}{{?`}}1 {¡}{{!`}}1
+}
+
+% --- ENCABEZADOS Y PIES DE PÁGINA ---
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{darkgray}\textit{Pontificia Universidad Javeriana Cali --- Computación Científica}}
+\fancyhead[R]{\small\color{darkgray}\textit{Taller 1: Factorización LU (Método de Crout)}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\titleformat{\section}{\Large\bfseries\color{pujblue}}{\thesection}{1em}{}[\titlerule]
+\titleformat{\subsection}{\large\bfseries\color{darkblue}}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{darkblue}}{\thesubsubsection}{1em}{}
+
+% ==============================================================================
+% INICIO DEL DOCUMENTO
+% ==============================================================================
+\begin{document}
+
+\begin{center}
+    {\LARGE\bfseries\color{pujblue} Taller 1: Factorización LU (Método de Crout) y Aplicaciones}\\[0.3cm]
+    {\large Computación Científica --- Pontificia Universidad Javeriana Cali}\\[0.1cm]
+    {\normalsize Profesor: Juan Fernando Paz}
+\end{center}
+\vspace{0.3cm}
+
+% ==============================================================================
+% ALGORITMOS BASE IMPLEMENTADOS EN PYTHON
+% ==============================================================================
+\section{Implementación de los Algoritmos Base en Python}
+
+Para resolver ambos ejercicios se implementaron desde cero el \textbf{Método de Crout} ($A = LU$, donde $L$ es triangular inferior y $U$ es triangular superior con $1$s en su diagonal principal), junto con los algoritmos de \textbf{Sustitución Hacia Adelante} ($Ly = b$) y \textbf{Sustitución Hacia Atrás} ($Ux = y$).
+
+\begin{lstlisting}
+import numpy as np
+from scipy.linalg import lu_factor, lu_solve
+
+np.set_printoptions(precision=4, suppress=True)
+
+def factorizacion_crout(A):
+    A = np.array(A, dtype=float)
+    n = A.shape[0]
+    
+    L = np.zeros((n, n), dtype=float)
+    U = np.eye(n, dtype=float)  # Diagonal con 1s
+    
+    for j in range(n):
+        # 1. Construccion de la columna j de L
+        for i in range(j, n):
+            suma_L = 0.0
+            for k in range(j):
+                suma_L += L[i, k] * U[k, j]
+            L[i, j] = A[i, j] - suma_L
+        
+        # 2. Construccion de la fila j de U
+        if L[j, j] != 0.0:
+            for k2 in range(j + 1, n):
+                suma_U = 0.0
+                for r in range(j):
+                    suma_U += L[j, r] * U[r, k2]
+                U[j, k2] = (A[j, k2] - suma_U) / L[j, j]
+            
+    return L, U
+
+def sustitucion_adelante(L, b):
+    L = np.array(L, dtype=float)
+    b = np.array(b, dtype=float)
+    n = len(b)
+    y = np.zeros(n, dtype=float)
+    
+    for i in range(n):
+        suma = 0.0
+        for k in range(i):
+            suma += L[i, k] * y[k]
+        y[i] = (b[i] - suma) / L[i, i]
+        
+    return y
+
+def sustitucion_atras(U, y):
+    U = np.array(U, dtype=float)
+    y = np.array(y, dtype=float)
+    n = len(y)
+    x = np.zeros(n, dtype=float)
+    
+    for i in range(n - 1, -1, -1):
+        suma = 0.0
+        for k in range(i + 1, n):
+            suma += U[i, k] * x[k]
+        x[i] = (y[i] - suma) / U[i, i]
+        
+    return x
+\end{lstlisting}
+
+% ==============================================================================
+% EJERCICIO 1
+% ==============================================================================
+\section{Ejercicio 1: Cantidad de Productos Generados}
+
+El sistema de ecuaciones que modela los requerimientos de acero ($b_1$), plástico ($b_2$) y aluminio ($b_3$) para producir $x_1, x_2, x_3$ unidades de los productos A, B y C es:
+\begin{equation}
+    \underbrace{\begin{pmatrix}
+        2 & 1 & 1 \\
+        1 & 3 & 1 \\
+        1 & 1 & 2
+    \end{pmatrix}}_{A}
+    \underbrace{\begin{pmatrix}
+        x_1 \\ x_2 \\ x_3
+    \end{pmatrix}}_{x}
+    =
+    \underbrace{\begin{pmatrix}
+        b_1 \\ b_2 \\ b_3
+    \end{pmatrix}}_{b}
+\end{equation}
+
+\subsection{Actividad 1: Factorización LU de la Matriz de Coeficientes}
+Al aplicar la función \texttt{factorizacion\_crout(A)} sobre la matriz de coeficientes $A$, se obtienen las matrices $L$ y $U$:
+\begin{equation}
+    L = \begin{pmatrix}
+        2.0 & 0.0 & 0.0 \\
+        1.0 & 2.5 & 0.0 \\
+        1.0 & 0.5 & 1.4
+    \end{pmatrix}, \qquad
+    U = \begin{pmatrix}
+        1.0 & 0.5 & 0.5 \\
+        0.0 & 1.0 & 0.2 \\
+        0.0 & 0.0 & 1.0
+    \end{pmatrix}
+\end{equation}
+Verificando el producto matricial se comprueba que $L \cdot U = A$ de forma exacta.
+
+\subsection{Actividad 2: Cantidad de Productos para los Tres Escenarios}
+Para cada vector de disponibilidad $b$, se resuelve primero $Ly = b$ (sustitución hacia adelante) y luego $Ux = y$ (sustitución hacia atrás):
+
+\begin{table}[h!]
+    \centering
+    \caption{Resultados de producción para los tres escenarios de materia prima.}
+    \begin{tabular}{llcc}
+        \toprule
+        \textbf{Escenario} & \textbf{Vector de Recursos $b$} & \textbf{Vector Intermedio $y$} & \textbf{Producción $x = [x_1, x_2, x_3]^T$} \\
+        \midrule
+        Escenario 1 & $[100, 120, 90]^T$ & $[50.0000, 28.0000, 18.5714]^T$ & $[28.5714, 24.2857, 18.5714]^T$ \\
+        Escenario 2 & $[80, 100, 110]^T$ & $[40.0000, 24.0000, 41.4286]^T$ & $[11.4286, 15.7143, 41.4286]^T$ \\
+        Escenario 3 & $[150, 160, 140]^T$ & $[75.0000, 34.0000, 34.2857]^T$ & $[44.2857, 27.1429, 34.2857]^T$ \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Escenario 1:} Producto A $= 28.5714$, Producto B $= 24.2857$, Producto C $= 18.5714$ unidades.
+    \item \textbf{Escenario 2:} Producto A $= 11.4286$, Producto B $= 15.7143$, Producto C $= 41.4286$ unidades.
+    \item \textbf{Escenario 3:} Producto A $= 44.2857$, Producto B $= 27.1429$, Producto C $= 34.2857$ unidades.
+\end{itemize}
+
+\subsection{Actividad 3: Explicación de Eficiencia Computacional (LU vs. Eliminación Gaussiana)}
+La factorización LU resulta mucho más eficiente cuando se deben resolver múltiples sistemas lineales $Ax = b^{(k)}$ que comparten la misma matriz de coeficientes $A$:
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Con Eliminación Gaussiana desde cero:} Triangularizar la matriz aumentada $[A \mid b]$ requiere un costo de $\mathcal{O}\left(\frac{2}{3}n^3\right)$ operaciones. Si se tienen $m$ escenarios independientes, habría que repetir exactamente las mismas transformaciones sobre la matriz $A$ un total de $m$ veces, con un costo acumulado de $m \times \mathcal{O}\left(\frac{2}{3}n^3\right)$.
+    \item \textbf{Con Factorización LU:} La descomposición $A = LU$ se calcula \textbf{una sola vez} con costo $\mathcal{O}\left(\frac{2}{3}n^3\right)$. Posteriormente, para cada nuevo vector $b$, únicamente se resuelven los dos sistemas triangulares $Ly = b$ y $Ux = y$ mediante sustitución hacia adelante y hacia atrás, lo cual cuesta apenas $\mathcal{O}(2n^2)$ operaciones por escenario. El costo total se reduce a $\mathcal{O}\left(\frac{2}{3}n^3\right) + m \times \mathcal{O}(2n^2)$.
+\end{enumerate}
+
+\subsection{Actividad 4: Solución con SciPy (\texttt{lu\_factor} y \texttt{lu\_solve}) y Comparación}
+\begin{lstlisting}
+lu_compacta, piv = lu_factor(A)
+
+x1_scipy = lu_solve((lu_compacta, piv), np.array([100.0, 120.0, 90.0]))
+x2_scipy = lu_solve((lu_compacta, piv), np.array([80.0, 100.0, 110.0]))
+x3_scipy = lu_solve((lu_compacta, piv), np.array([150.0, 160.0, 140.0]))
+\end{lstlisting}
+\textbf{Comparación:}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Exactitud:} Tanto el método de Crout implementado manualmente como \texttt{lu\_factor}/\texttt{lu\_solve} de SciPy producen exactamente los mismos vectores solución:
+    \begin{align*}
+        x^{(1)}_{\text{SciPy}} &= [28.5714, \, 24.2857, \, 18.5714]^T \\
+        x^{(2)}_{\text{SciPy}} &= [11.4286, \, 15.7143, \, 41.4286]^T \\
+        x^{(3)}_{\text{SciPy}} &= [44.2857, \, 27.1429, \, 34.2857]^T
+    \end{align*}
+    \item \textbf{Diferencia práctica:} Frente a resolver cada sistema de manera independiente, el esquema en dos funciones (\texttt{lu\_factor} una sola vez y \texttt{lu\_solve} para cada escenario) encapsula la reutilización de la factorización en rutinas precompiladas de alto rendimiento (LAPACK), reduciendo el código requerido y garantizando estabilidad numérica mediante pivoteo parcial automático.
+\end{itemize}
+
+% ==============================================================================
+% EJERCICIO 2
+% ==============================================================================
+\section{Ejercicio 2: Estimación de Emisiones Contaminantes en una Red de Sensores}
+
+Se modela una red de $50$ sensores y $50$ fuentes de emisión mediante el sistema lineal $Ax = b$, con $A \in \mathbb{R}^{50 \times 50}$ y $b \in \mathbb{R}^{50}$.
+
+\subsection{Código de Generación, Acondicionamiento y Resolución}
+\begin{lstlisting}
+def modificar_a_diagonal_dominante_estricta(A):
+    A_mod = np.copy(A)
+    n = A_mod.shape[0]
+    for i in range(n):
+        suma_fuera_diagonal = 0.0
+        for j in range(n):
+            if j != i:
+                suma_fuera_diagonal += abs(A_mod[i, j])
+        A_mod[i, i] = suma_fuera_diagonal + 1.0
+    return A_mod
+
+# Actividades 1, 2 y 3: Generacion de datos (semilla 42)
+np.random.seed(42)
+n = 50
+A_sintetica = np.random.uniform(0.0, 1.0, size=(n, n))
+A_dominante = modificar_a_diagonal_dominante_estricta(A_sintetica)
+b = np.random.uniform(0.0, 100.0, size=n)
+
+# Actividad 4: Factorizacion LU con Crout
+L, U = factorizacion_crout(A_dominante)
+
+# Actividad 5: Sustitucion hacia adelante y hacia atras
+y = sustitucion_adelante(L, b)
+x = sustitucion_atras(U, y)
+
+# Actividad 6: Vector residuo y norma euclidiana
+r = (A_dominante @ x) - b
+norma_residuo = np.linalg.norm(r, 2)
+\end{lstlisting}
+
+\subsection{Desarrollo de las Actividades 1 a 6}
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Actividad 1 (Matriz $A$ aleatoria):} Se generó $A \in \mathbb{R}^{50 \times 50}$ con elementos distribuidos uniformemente en $[0, 1]$. Muestra de la submatriz inicial $A_{0:3, 0:3}$:
+    \[
+        A_{0:3, 0:3} = \begin{pmatrix}
+            0.3745 & 0.9507 & 0.7320 \\
+            0.9696 & 0.7751 & 0.9395 \\
+            0.0314 & 0.6364 & 0.3144
+        \end{pmatrix}
+    \]
+    \item \textbf{Actividad 2 (Modificación de la diagonal principal):} Se actualizó cada entrada diagonal según:
+    \begin{equation}
+        a_{ii} = \sum_{\substack{j=1 \\ j \neq i}}^{50} |a_{ij}| + 1
+    \end{equation}
+    obteniendo la matriz con \textbf{dominancia diagonal estricta}:
+    \[
+        A^{\text{dom}}_{0:3, 0:3} = \begin{pmatrix}
+            22.9217 & 0.9507 & 0.7320 \\
+            0.9696 & 24.9467 & 0.9395 \\
+            0.0314 & 0.6364 & 24.6006
+        \end{pmatrix}
+    \]
+    Esta propiedad garantiza matemáticamente (por el Teorema de Gershgorin) que $\det(A) \neq 0$ y que todos los pivotes $l_{ii}$ del método de Crout sean distintos de cero sin requerir intercambios de filas.
+    \item \textbf{Actividad 3 (Vector de mediciones $b$):} Se generó $b \in \mathbb{R}^{50}$ con valores en $[0, 100]$. Primeras 5 mediciones:
+    \[
+        b_{0:5} = [82.7519, \; 76.4528, \; 57.3529, \; 95.6047, \; 20.0475]^T
+    \]
+    \item \textbf{Actividad 4 (Factorización con Crout):} Se obtuvieron $L \in \mathbb{R}^{50 \times 50}$ y $U \in \mathbb{R}^{50 \times 50}$ ($u_{ii} = 1$), con un error de factorización de:
+    \[
+        \|A - LU\|_2 = 3.91 \times 10^{-15}
+    \]
+    \item \textbf{Actividad 5 (Resolución $Ly = b$ y $Ux = y$):} Las primeras 5 intensidades de emisión estimadas fueron:
+    \[
+        x_{0:5} = [2.4363, \; 1.9972, \; 1.2748, \; 2.6976, \; -0.3245]^T
+    \]
+    \item \textbf{Actividad 6 (Verificación mediante el residuo):} Calculando el vector residuo $r = Ax - b$, se obtuvo la norma euclidiana:
+    \begin{equation}
+        \|r\|_2 = \|Ax - b\|_2 = 6.69 \times 10^{-14}
+    \end{equation}
+    Como $\|r\|_2 \approx 0$ (del orden de la precisión de máquina $10^{-14}$), se comprueba que la solución $x$ hallada es numéricamente exacta.
+\end{enumerate}
+
+\subsection{Pregunta de Análisis}
+\textbf{Pregunta:} \textit{Suponga que la red de sensores permanece igual, pero se realizan nuevas mediciones en otro momento (es decir, la matriz $A$ permanece constante pero cambia el vector $b$). Explique qué parte del procedimiento podría reutilizarse para resolver el nuevo sistema de manera más eficiente.}
+
+\medskip
+\noindent\textbf{Respuesta:}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Parte que se reutiliza:} Se reutilizan directamente las matrices triangulares \textbf{$L$ y $U$} obtenidas en la factorización $A = LU$, ya que la matriz $A$ solo depende de la ubicación física y factores de dispersión constantes entre las fuentes y los sensores.
+    \item \textbf{Operaciones para cada nueva medición $b_{\text{nuevo}}$:} Únicamente se deben ejecutar la \textbf{sustitución hacia adelante} ($Ly = b_{\text{nuevo}}$) y la \textbf{sustitución hacia atrás} ($Ux = y$).
+    \item \textbf{Ventaja de eficiencia:} Factorizar la matriz $A$ de $50 \times 50$ requiere aproximadamente $\frac{2}{3}(50)^3 \approx 83,333$ operaciones, mientras que resolver los sistemas triangulares $Ly = b$ y $Ux = y$ requiere apenas $2(50)^2 = 5,000$ operaciones por cada nuevo vector de mediciones (un ahorro superior al $94\%$ del costo computacional).
+\end{itemize}
+
+\end{document}

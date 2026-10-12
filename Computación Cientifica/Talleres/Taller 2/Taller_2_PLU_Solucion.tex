@@ -1,0 +1,335 @@
+\documentclass[11pt,a4paper]{article}
+
+% --- PAQUETES DE IDIOMA Y CODIFICACIÓN ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla,es-nodecimaldot,es-noshorthands]{babel}
+
+% --- MATEMÁTICAS Y SÍMBOLOS ---
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{mathtools}
+
+% --- FORMATO Y DISEÑO DE PÁGINA ---
+\usepackage[top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm]{geometry}
+\usepackage{fancyhdr}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{titlesec}
+
+% --- COLORES Y CÓDIGO ---
+\usepackage[table]{xcolor}
+\definecolor{pujblue}{RGB}{0, 51, 102}
+\definecolor{darkblue}{RGB}{16, 44, 87}
+\definecolor{codebg}{RGB}{248, 249, 250}
+\definecolor{darkgray}{RGB}{60, 60, 60}
+
+\usepackage{listings}
+\usepackage[colorlinks=true, linkcolor=pujblue, citecolor=pujblue, urlcolor=pujblue]{hyperref}
+
+% --- CONFIGURACIÓN DE LISTINGS (SOPORTE COMPLETO UTF-8 / ESPAÑOL) ---
+\lstset{
+    language=Python,
+    backgroundcolor=\color{codebg},
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{pujblue}\bfseries,
+    commentstyle=\color{gray}\itshape,
+    stringstyle=\color{teal},
+    breaklines=true,
+    frame=single,
+    rulecolor=\color{black!20},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    numbersep=8pt,
+    tabsize=4,
+    showstringspaces=false,
+    literate=
+      {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+      {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+      {ñ}{{\~n}}1 {Ñ}{{\~N}}1 {ü}{{\"u}}1 {Ü}{{\"U}}1
+      {¿}{{?`}}1 {¡}{{!`}}1
+}
+
+% --- ENCABEZADOS Y PIES DE PÁGINA ---
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{darkgray}\textit{Pontificia Universidad Javeriana Cali --- Computación Científica}}
+\fancyhead[R]{\small\color{darkgray}\textit{Taller 2: Factorización PLU}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\titleformat{\section}{\Large\bfseries\color{pujblue}}{\thesection}{1em}{}[\titlerule]
+\titleformat{\subsection}{\large\bfseries\color{darkblue}}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{darkblue}}{\thesubsubsection}{1em}{}
+
+% ==============================================================================
+% INICIO DEL DOCUMENTO
+% ==============================================================================
+\begin{document}
+
+\begin{center}
+    {\LARGE\bfseries\color{pujblue} Taller 2: Modelo Económico Multisectorial mediante Factorización PLU}\\[0.3cm]
+    {\large Computación Científica --- Pontificia Universidad Javeriana Cali}\\[0.1cm]
+    {\normalsize Profesor: Juan Fernando Paz}
+\end{center}
+\vspace{0.3cm}
+
+% ==============================================================================
+% SECCIÓN 1: MODELO Y ALGORITMOS EN PYTHON
+% ==============================================================================
+\section{Implementación de la Factorización PLU y Sustituciones en Python}
+
+Se analiza una economía simplificada de $30$ sectores productivos mediante el sistema lineal $Ax = b$, donde $A \in \mathbb{R}^{30 \times 30}$ es la matriz de requerimientos entre sectores, $x \in \mathbb{R}^{30}$ es el nivel de producción de cada sector y $b \in \mathbb{R}^{30}$ es el vector de demanda final.
+
+A continuación se presenta la implementación de la factorización $PA = LU$ mediante eliminación de Gauss con pivoteo parcial y los algoritmos de sustitución hacia adelante ($Ly = Pb$) y hacia atrás ($Ux = y$):
+
+\begin{lstlisting}
+import time
+import numpy as np
+from scipy.linalg import lu, solve_triangular
+
+np.set_printoptions(precision=4, suppress=True)
+
+def factorizacion_plu(A):
+    """
+    Calcula la descomposicion PA = LU mediante eliminacion de Gauss
+    con pivoteo parcial.
+    """
+    A = np.array(A, dtype=float)
+    n = len(A)
+
+    U = np.copy(A)
+    L = np.eye(n, dtype=float)
+    P = np.eye(n, dtype=float)
+
+    for k in range(n - 1):
+        # 1. Buscar el pivote de mayor valor absoluto en la columna k (desde fila k hasta n-1)
+        piv = k
+        mayor = abs(U[k, k])
+        for i in range(k + 1, n):
+            if abs(U[i, k]) > mayor:
+                mayor = abs(U[i, k])
+                piv = i
+
+        # 2. Si la fila con mayor valor no es la fila k, intercambiar filas
+        if piv != k:
+            temp_U = np.copy(U[k])
+            U[k] = U[piv]
+            U[piv] = temp_U
+
+            temp_P = np.copy(P[k])
+            P[k] = P[piv]
+            P[piv] = temp_P
+
+            for col in range(k):
+                temp_L = L[k, col]
+                L[k, col] = L[piv, col]
+                L[piv, col] = temp_L
+
+        # 3. Eliminacion hacia adelante debajo del pivote U[k, k]
+        for i in range(k + 1, n):
+            factor = U[i, k] / U[k, k]
+            L[i, k] = factor
+            for j in range(k, n):
+                U[i, j] = U[i, j] - factor * U[k, j]
+
+    return P, L, U
+
+def sustitucion_adelante(L, b):
+    L = np.array(L, dtype=float)
+    b = np.array(b, dtype=float)
+    n = len(b)
+    y = np.zeros(n, dtype=float)
+
+    for i in range(n):
+        suma = 0.0
+        for k in range(i):
+            suma += L[i, k] * y[k]
+        y[i] = (b[i] - suma) / L[i, i]
+
+    return y
+
+def sustitucion_atras(U, y):
+    U = np.array(U, dtype=float)
+    y = np.array(y, dtype=float)
+    n = len(y)
+    x = np.zeros(n, dtype=float)
+
+    for i in range(n - 1, -1, -1):
+        suma = 0.0
+        for k in range(i + 1, n):
+            suma += U[i, k] * x[k]
+        x[i] = (y[i] - suma) / U[i, i]
+
+    return x
+
+def resolver_sistema_plu(P, L, U, b):
+    Pb = P @ b
+    y = sustitucion_adelante(L, Pb)
+    x = sustitucion_atras(U, y)
+    return x, y, Pb
+\end{lstlisting}
+
+% ==============================================================================
+% SECCIÓN 2: ACTIVIDADES (1 A 6)
+% ==============================================================================
+\section{Desarrollo de las Actividades}
+
+\subsection{Actividad 1: ¿Por qué es necesario utilizar pivoteo parcial?}
+Al inspeccionar la diagonal principal de la matriz de relaciones $A \in \mathbb{R}^{30 \times 30}$, se observa que su primer elemento es exactamente cero ($a_{0,0} = 0.0$), y además existen ceros en la diagonal en las filas con índices:
+\[
+    \text{Filas con } a_{ii} = 0: \quad [0, \; 5, \; 10, \; 15, \; 20, \; 25]
+\]
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Imposibilidad de aplicar LU directo (división por cero):} En la eliminación de Gauss estándar o en el método de Crout sin pivoteo, el primer paso divide entre el pivote $a_{0,0} = 0$, lo que ocasiona una división por cero inmediata aunque la matriz $A$ sea invertible.
+    \item \textbf{Estabilidad numérica:} El pivoteo parcial busca en cada etapa $k$ el elemento de mayor valor absoluto en la columna actual desde la fila $k$ hacia abajo ($\max_{i \ge k} |u_{ik}|$) e intercambia las filas mediante la matriz de permutación $P$. Esto garantiza que todos los multiplicadores en $L$ cumplan $|l_{ik}| \le 1$ y evita la amplificación de errores de redondeo.
+\end{enumerate}
+
+\subsection{Actividad 2: Obtención de las Matrices $P$, $L$ y $U$ ($PA = LU$)}
+Al ejecutar \texttt{P, L, U = factorizacion\_plu(A)}, se obtienen tres matrices de dimensión $30 \times 30$. A continuación se muestra el bloque superior izquierdo ($5 \times 5$) de $L$ y $U$:
+\begin{equation}
+    L_{0:5, 0:5} = \begin{pmatrix}
+        1.0000 & 0.0000 & 0.0000 & 0.0000 & 0.0000 \\
+        0.2222 & 1.0000 & 0.0000 & 0.0000 & 0.0000 \\
+        0.6667 & -0.1304 & 1.0000 & 0.0000 & 0.0000 \\
+        0.7778 & -0.4783 & 0.3621 & 1.0000 & 0.0000 \\
+        0.5556 & -0.1739 & 0.9368 & 0.0653 & 1.0000
+    \end{pmatrix}
+\end{equation}
+\begin{equation}
+    U_{0:5, 0:5} = \begin{pmatrix}
+        9.0000 & 6.0000 & 3.0000 & 1.0000 & 4.0000 \\
+        0.0000 & 7.6667 & 4.3333 & 5.7778 & 3.1111 \\
+        0.0000 & 0.0000 & 7.5652 & 4.0870 & -1.2609 \\
+        0.0000 & 0.0000 & 0.0000 & 9.5057 & -0.1667 \\
+        0.0000 & 0.0000 & 0.0000 & 0.0000 & 8.5109
+    \end{pmatrix}
+\end{equation}
+
+\subsection{Actividad 3: Verificación Numérica de la Factorización $\|PA - LU\|_2$}
+Calculando la norma euclidiana de la diferencia entre $PA$ y $LU$:
+\begin{equation}
+    \|P A - L U\|_2 = 1.2223 \times 10^{-14}
+\end{equation}
+Dado que el valor es del orden de $10^{-14}$ (precisión de punto flotante de 64 bits), se verifica que se cumple $PA = LU$ con exactitud numérica.
+
+\subsection{Actividades 4, 5 y 6: Resolución de los Escenarios Económicos y Residuos}
+Se generaron tres vectores de demanda $b^{(1)}, b^{(2)}, b^{(3)} \in \mathbb{R}^{30}$ dentro del intervalo $[50, 500]$:
+\begin{lstlisting}
+np.random.seed(42)
+# Escenario 1 (Normal): valores en [180, 320]
+b1_normal = np.random.uniform(180.0, 320.0, size=30)
+# Escenario 2 (Expansion): aumento de demanda respecto al normal, dentro de [240, 500]
+b2_expansion = b1_normal + np.random.uniform(60.0, 180.0, size=30)
+# Escenario 3 (Desaceleracion): disminucion de demanda respecto al normal, dentro de [50, 260]
+b3_desaceleracion = b1_normal - np.random.uniform(60.0, 130.0, size=30)
+\end{lstlisting}
+
+Para cada escenario $k \in \{1, 2, 3\}$ se transformó el sistema $Ax^{(k)} = b^{(k)}$ en $LUx^{(k)} = Pb^{(k)}$, resolviendo primero $Ly^{(k)} = Pb^{(k)}$ (sustitución hacia adelante) y luego $Ux^{(k)} = y^{(k)}$ (sustitución hacia atrás), verificando cada solución con el residuo $r^{(k)} = Ax^{(k)} - b^{(k)}$:
+
+\begin{table}[h!]
+    \centering
+    \small
+    \caption{Resumen de resultados y verificación de residuos para los tres escenarios.}
+    \begin{tabular}{lccc}
+        \toprule
+        \textbf{Escenario Económico} & \textbf{Rango de $b^{(k)}$} & \textbf{Muestra $x^{(k)}_{0:3}$} & \textbf{Norma del Residuo $\|r^{(k)}\|_2$} \\
+        \midrule
+        1. Condiciones normales & $[182.88, \, 315.79]$ & $[4.7360, \, 7.6456, \, 37.3408]$ & $9.3921 \times 10^{-13}$ \\
+        2. Expansión económica & $[257.53, \, 460.55]$ & $[22.6934, \, 3.6774, \, 70.9056]$ & $1.7912 \times 10^{-12}$ \\
+        3. Desaceleración económica & $[68.82, \, 241.88]$ & $[7.2237, \, 1.8560, \, 26.2147]$ & $5.0223 \times 10^{-13}$ \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+En los tres escenarios, $\|r^{(k)}\|_2 \approx 10^{-13}$, comprobando que los vectores $x^{(1)}, x^{(2)}, x^{(3)}$ satisfacen el sistema lineal con precisión de máquina.
+
+% ==============================================================================
+% SECCIÓN 3: ANÁLISIS ECONÓMICO
+% ==============================================================================
+\section{Análisis Económico}
+
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{¿Qué sectores requieren un mayor nivel de producción en cada escenario?}
+    \begin{itemize}
+        \item \textbf{Escenario 1 (Normal):} Sector 12 (índice 11) con $44.6787$, Sector 15 (índice 14) con $41.3711$ y Sector 30 (índice 29) con $38.8549$ unidades.
+        \item \textbf{Escenario 2 (Expansión):} Sector 12 (índice 11) con $95.6412$, Sector 9 (índice 8) con $87.4098$ y Sector 30 (índice 29) con $81.9160$ unidades.
+        \item \textbf{Escenario 3 (Desaceleración):} Sector 12 (índice 11) con $42.7345$, Sector 15 (índice 14) con $31.8176$ y Sector 30 (índice 29) con $26.4769$ unidades.
+    \end{itemize}
+    Los sectores 12 y 30 encabezan de manera consistente los requerimientos productivos al actuar como sectores proveedores transversales de insumos para el resto de la economía.
+
+    \item \textbf{¿Qué sectores presentan el mayor cambio en su nivel de producción entre el escenario normal y el escenario de expansión?}
+    \begin{itemize}
+        \item \textbf{Sector 11 (índice 10):} variación de $-52.6194$ unidades (magnitud $52.6194$).
+        \item \textbf{Sector 9 (índice 8):} incremento de $+52.4702$ unidades (magnitud $52.4702$).
+        \item \textbf{Sector 12 (índice 11):} incremento de $+50.9625$ unidades (magnitud $50.9625$).
+    \end{itemize}
+
+    \item \textbf{¿Qué sectores se ven más afectados durante la desaceleración económica?}
+    \begin{itemize}
+        \item \textbf{Sector 4 (índice 3):} variación de $+18.8072$ unidades (magnitud $18.8072$).
+        \item \textbf{Sector 30 (índice 29):} caída de $-12.3780$ unidades (magnitud $12.3780$).
+        \item \textbf{Sector 13 (índice 12):} caída de $-11.9702$ unidades (magnitud $11.9702$).
+    \end{itemize}
+
+    \item \textbf{¿Por qué la matriz $A$ puede mantenerse constante mientras cambia el vector $b$?}
+    Porque la matriz $A$ representa las relaciones tecnológicas y productivas internas entre los 30 sectores (cuántas unidades de insumo requiere cada sector de los demás por unidad producida). Estas proporciones dependen de la maquinaria, infraestructura y procesos industriales instalados, que permanecen fijos en el corto y mediano plazo. Por el contrario, el vector $b$ representa la demanda final del mercado (consumo, inversión y exportaciones), la cual varía continuamente según la coyuntura económica.
+
+    \item \textbf{Si durante el día se reciben 100 nuevos vectores de demanda, ¿sería necesario volver a calcular las matrices $P$, $L$ y $U$?}
+    \textbf{No.} Como la matriz de coeficientes $A$ no cambia, la descomposición $PA = LU$ depende exclusivamente de $A$ y se calcula \textbf{una única vez}. Las matrices $P$, $L$ y $U$ se almacenan en memoria y se reutilizan para los 100 vectores.
+
+    \item \textbf{Explique qué operaciones deben realizarse nuevamente para cada nuevo vector $b$.}
+    Para cada nuevo vector de demanda $b$ solo se realizan tres pasos de costo $\mathcal{O}(n^2)$:
+    \begin{enumerate}
+        \item Multiplicar la matriz de permutación por el vector: $\tilde{b} = P b$ (reordenar las entradas de $b$ según los intercambios de filas registrados en $P$).
+        \item Resolver el sistema triangular inferior $Ly = \tilde{b}$ mediante \textbf{sustitución hacia adelante}.
+        \item Resolver el sistema triangular superior $Ux = y$ mediante \textbf{sustitución hacia atrás}.
+    \end{enumerate}
+\end{enumerate}
+
+% ==============================================================================
+% SECCIÓN 4: ANÁLISIS DE TIEMPO
+% ==============================================================================
+\section{Análisis de Tiempo: Matriz Inversa vs. Factorización PLU}
+
+Se comparó el tiempo de ejecución de calcular la solución analítica $x = A^{-1}b$ usando \texttt{Ainv = np.linalg.inv(A)} frente a la solución mediante factorización PLU con \texttt{from scipy.linalg import lu}:
+
+\begin{lstlisting}
+# 1. Solucion con Matriz Inversa
+inicio_inv = time.perf_counter()
+Ainv = np.linalg.inv(A)
+x_inv = Ainv @ b_prueba
+tiempo_inv = time.perf_counter() - inicio_inv
+
+# 2. Solucion con Factorizacion PLU (scipy.linalg.lu)
+inicio_lu = time.perf_counter()
+P_scipy, L_scipy, U_scipy = lu(A)
+Pb_scipy = P_scipy.T @ b_prueba
+y_scipy = solve_triangular(L_scipy, Pb_scipy, lower=True, unit_diagonal=True)
+x_lu = solve_triangular(U_scipy, y_scipy, lower=False)
+tiempo_lu = time.perf_counter() - inicio_lu
+\end{lstlisting}
+
+\begin{table}[h!]
+    \centering
+    \caption{Comparación de tiempos de ejecución entre \texttt{np.linalg.inv(A)} y \texttt{scipy.linalg.lu(A)}.}
+    \begin{tabular}{lcc}
+        \toprule
+        \textbf{Caso Evaluado} & \textbf{Con Inversa (\texttt{np.linalg.inv})} & \textbf{Con Factorización PLU (\texttt{scipy.linalg.lu})} \\
+        \midrule
+        Resolución de 1 escenario & $0.000031$ s & $0.000069$ s \\
+        Resolución de 100 escenarios de demanda & $0.001471$ s & $0.001205$ s \\
+        Diferencia numérica $\|x_{\text{inv}} - x_{\text{lu}}\|_2$ & \multicolumn{2}{c}{$3.4982 \times 10^{-13}$} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\noindent\textbf{Conclusión del Análisis de Tiempo:}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Complejidad algorítmica:} Calcular la matriz inversa $A^{-1}$ requiere $\approx 2n^3$ operaciones en punto flotante, lo cual es \textbf{tres veces más costoso} que calcular la factorización $PA = LU$ ($\approx \frac{2}{3}n^3$ operaciones).
+    \item \textbf{Escenarios múltiples:} Al recibir múltiples vectores de demanda $b$ (como los 100 vectores diarios), la factorización PLU descompone $A$ una sola vez y resuelve cada nuevo vector en $\mathcal{O}(2n^2)$ mediante sustituciones triangulares, superando en velocidad al recálculo con la inversa ($0.001205\text{ s}$ frente a $0.001471\text{ s}$).
+    \item \textbf{Estabilidad numérica:} En computación científica se evita invertir matrices explícitamente porque $A^{-1}$ introduce mayor acumulación de errores de redondeo que resolver directamente los sistemas triangulares $Ly = Pb$ y $Ux = y$.
+\end{itemize}
+
+\end{document}

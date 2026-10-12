@@ -316,36 +316,41 @@ Implementando el algoritmo de eliminación de Gauss con pivoteo parcial sobre la
 La discrepancia es del orden de la precisión de máquina, confirmando la exactitud de la factorización calculada.
 
 \subsection{Actividades 4, 5 y 6: Escenarios Económicos y Residuos}
-Se simulan tres condiciones de demanda final $b \in [50, 500]^{30}$:
+Se simulan tres condiciones de demanda final $b^{(1)}, b^{(2)}, b^{(3)} \in [50, 500]^{30}$:
 \begin{itemize}[leftmargin=*]
-    \item \textbf{Escenario 1 (Condiciones Normales):} Demanda base $b^{(1)}$.
-    \item \textbf{Escenario 2 (Expansión Económica):} $b^{(2)} = 1.30 \times b^{(1)}$ ($+30\%$ de demanda).
-    \item \textbf{Escenario 3 (Desaceleración Económica):} $b^{(3)} = 0.70 \times b^{(1)}$ ($-30\%$ de demanda).
+    \item \textbf{Escenario 1 (Condiciones Normales):} $b^{(1)} \in [180, 320]^{30}$.
+    \item \textbf{Escenario 2 (Expansión Económica):} Aumento de demanda respecto al normal, $b^{(2)} \in [240, 500]^{30}$.
+    \item \textbf{Escenario 3 (Desaceleración Económica):} Disminución de demanda respecto al normal, $b^{(3)} \in [50, 260]^{30}$.
 \end{itemize}
 
 Los resultados y residuos obtenidos se resumen en la Tabla \ref{tab:residuos_plu}.
 \begin{table}[h!]
     \centering
     \small
-    \caption{Resumen de producción total y verificación de residuos en los tres escenarios.}
+    \caption{Resumen de resultados y verificación de residuos en los tres escenarios.}
     \label{tab:residuos_plu}
     \begin{tabular}{lccc}
         \toprule
-        \textbf{Escenario} & \textbf{Demanda Total $\sum b$} & \textbf{Producción Total $\sum x$} & \textbf{Norma del Residuo $\|Ax - b\|_2$} \\
+        \textbf{Escenario} & \textbf{Rango de $b^{(k)}$} & \textbf{Muestra $x^{(k)}_{0:3}$} & \textbf{Norma del Residuo $\|Ax^{(k)} - b^{(k)}\|_2$} \\
         \midrule
-        1. Normal & $7455.75$ & $160.01$ & $3.6391 \times 10^{-12}$ \\
-        2. Expansión (+30\%) & $9692.48$ & $208.01$ & $6.1360 \times 10^{-12}$ \\
-        3. Desaceleración (-30\%) & $5219.03$ & $112.00$ & $2.3253 \times 10^{-12}$ \\
+        1. Normal & $[182.88, \, 315.79]$ & $[4.7360, \, 7.6456, \, 37.3408]$ & $9.3921 \times 10^{-13}$ \\
+        2. Expansión & $[257.53, \, 460.55]$ & $[22.6934, \, 3.6774, \, 70.9056]$ & $1.7912 \times 10^{-12}$ \\
+        3. Desaceleración & $[68.82, \, 241.88]$ & $[7.2237, \, 1.8560, \, 26.2147]$ & $5.0223 \times 10^{-13}$ \\
         \bottomrule
     \end{tabular}
 \end{table}
 
 \subsection{Sección 3: Análisis Económico}
 \begin{enumerate}[leftmargin=*]
-    \item \textbf{Sectores con mayor producción:} Los sectores clave corresponden a los índices $[8, 11, 29]$, con producciones de $233.94$, $229.56$ y $200.34$ unidades en condiciones normales. Representan industrias de insumos críticos de los cuales dependen los demás sectores (energía, transporte, insumos básicos).
-    \item \textbf{Sectores con mayor impacto en expansión:} Los mismos sectores $[8, 11, 29]$ experimentan los mayores aumentos absolutos ($+70.18$, $+68.87$ y $+60.10$ unidades), con una expansión media del $30.00\%$.
-    \item \textbf{Sectores más vulnerables ante desaceleración:} Los sectores $[8, 11, 29]$ sufren las mayores caídas de producción en términos absolutos, contrayéndose un $30.00\%$.
-    \item \textbf{Constancia de $A$ frente a $b$:} La matriz $A$ modela la estructura tecnológica y las funciones de producción intersectoriales (coeficientes de Leontief), que cambian lentamente a mediano/largo plazo con innovaciones técnicas. En contraste, el vector $b$ representa la demanda de consumo final (hogares, gobierno, exportaciones), sujeta a fluctuaciones del ciclo económico.
+    \item \textbf{Sectores con mayor producción:}
+    \begin{itemize}
+        \item Escenario 1 (Normal): Sector 12 (índice 11: $44.6787$), Sector 15 (índice 14: $41.3711$) y Sector 30 (índice 29: $38.8549$).
+        \item Escenario 2 (Expansión): Sector 12 (índice 11: $95.6412$), Sector 9 (índice 8: $87.4098$) y Sector 30 (índice 29: $81.9160$).
+        \item Escenario 3 (Desaceleración): Sector 12 (índice 11: $42.7345$), Sector 15 (índice 14: $31.8176$) y Sector 30 (índice 29: $26.4769$).
+    \end{itemize}
+    \item \textbf{Sectores con mayor cambio entre normal y expansión:} Sector 11 (índice 10, cambio de $-52.6194$), Sector 9 (índice 8, $+52.4702$) y Sector 12 (índice 11, $+50.9625$).
+    \item \textbf{Sectores más afectados durante la desaceleración:} Sector 4 (índice 3, variación de $+18.8072$), Sector 30 (índice 29, caída de $-12.3780$) y Sector 13 (índice 12, caída de $-11.9702$).
+    \item \textbf{Constancia de $A$ frente a $b$:} La matriz $A$ modela la estructura tecnológica y las relaciones productivas intersectoriales, que cambian lentamente a mediano/largo plazo. En contraste, el vector $b$ representa la demanda final del mercado, sujeta a fluctuaciones del ciclo económico.
     \item \textbf{Reutilización ante 100 nuevos vectores de demanda:} \textbf{No} es necesario recomputar $P, L, U$. La descomposición $PA = LU$ se calcula una sola vez y se preserva en memoria.
     \item \textbf{Operaciones repetidas por cada vector:} Únicamente se calculan:
     \begin{enumerate}
@@ -353,38 +358,32 @@ Los resultados y residuos obtenidos se resumen en la Tabla \ref{tab:residuos_plu
         \item Sustitución hacia adelante: $Ly = \tilde{b}$ con costo $\mathcal{O}(n^2)$.
         \item Sustitución hacia atrás: $Ux = y$ con costo $\mathcal{O}(n^2)$.
     \end{enumerate}
-    Costo por nuevo vector: $2(30)^2 = 1{,}800$ FLOPs frente a $\frac{2}{3}(30)^3 = 18{,}000$ FLOPs de re-factorizar, logrando un \textbf{ahorro del 90\% de operaciones}.
 \end{enumerate}
 
 \subsection{Sección 4: Análisis de Tiempo (Inversa vs. Factorización PLU)}
-Se realizó un benchmark comparativo de $10{,}000$ iteraciones entre calcular la solución con la inversa analítica $x = A^{-1}b$ y resolver mediante factorización PLU (Tabla \ref{tab:benchmark_tiempo}).
+Se comparó el tiempo de ejecución de calcular la solución analítica $x = A^{-1}b$ (\texttt{np.linalg.inv}) frente a la solución con factorización PLU (\texttt{scipy.linalg.lu}):
 
 \begin{table}[h!]
     \centering
     \small
-    \caption{Comparativa de tiempo computacional para $10{,}000$ iteraciones.}
+    \caption{Comparativa de tiempo computacional entre Matriz Inversa y Factorización PLU.}
     \label{tab:benchmark_tiempo}
     \begin{tabular}{lcc}
         \toprule
-        \textbf{Método} & \textbf{Tiempo Total (s)} & \textbf{Tiempo por Operación ($\mu$s)} \\
+        \textbf{Caso Evaluado} & \textbf{Con Inversa (\texttt{np.linalg.inv})} & \textbf{Con PLU (\texttt{scipy.linalg.lu})} \\
         \midrule
-        \multicolumn{3}{l}{\textit{A. Calculando desde cero cada vez}} \\
-        Matriz Inversa (\texttt{np.linalg.inv}) & $0.1479$ & $14.79$ \\
-        PLU SciPy (\texttt{lu\_factor} + \texttt{lu\_solve}) & $0.1616$ & $16.16$ \\
-        PLU Completo (\texttt{scipy.linalg.lu}) & $1.8109$ & $181.09$ \\
-        \midrule
-        \multicolumn{3}{l}{\textit{B. Reutilizando la estructura precalculada}} \\
-        Producto con Inversa precalculada ($A^{-1}b$) & $0.0094$ & $0.94$ \\
-        Sustituciones \texttt{lu\_solve} de SciPy & $0.0760$ & $7.60$ \\
+        Resolución de 1 escenario & $0.000031$ s & $0.000069$ s \\
+        Resolución de 100 escenarios de demanda & $0.001471$ s & $0.001205$ s \\
+        Diferencia $\|x_{\text{inv}} - x_{\text{lu}}\|_2$ & \multicolumn{2}{c}{$3.4982 \times 10^{-13}$} \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-\textbf{Justificación de la regla de oro: ``Nunca calcular la inversa explícita $A^{-1}$'':}
+\textbf{Justificación de por qué no se debe invertir la matriz explícitamente:}
 \begin{enumerate}
     \item \textbf{Costo computacional:} Invertir $A$ explícitamente requiere $\approx 2n^3$ FLOPs (el triple de una factorización PLU que requiere $\approx \frac{2}{3}n^3$ FLOPs).
-    \item \textbf{Estabilidad numérica:} Calcular $A^{-1}$ y luego multiplicar por $b$ acumula dos fuentes de error de redondeo. Además, la inversa destruye cualquier estructura dispersa (sparse) o banda de la matriz original.
-    \item Resolver mediante sistemas triangulares acoplados ($LUx = Pb$) mantiene el número de condición efectivo y asegura estabilidad óptima.
+    \item \textbf{Reutilización ante múltiples demandas:} Para los 100 escenarios de demanda, reutilizar la factorización $PA = LU$ resulta más rápido ($0.001205\text{ s}$ frente a $0.001471\text{ s}$).
+    \item \textbf{Estabilidad numérica:} Resolver mediante sistemas triangulares acoplados ($Ly = Pb$, $Ux = y$) evita la acumulación adicional de errores de redondeo de la inversión explícita.
 \end{enumerate}
 
 \newpage
