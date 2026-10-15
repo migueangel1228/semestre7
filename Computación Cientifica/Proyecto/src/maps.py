@@ -1,7 +1,7 @@
 """
 Definición de sistemas dinámicos discretos unidimensionales:
 1. Mapa Logístico (Logistic Map)
-2. Mapa de Tienda / Carpa (Tent Map)
+2. Mapa de Tienda (Tent Map)
 """
 
 from typing import Union, Tuple
