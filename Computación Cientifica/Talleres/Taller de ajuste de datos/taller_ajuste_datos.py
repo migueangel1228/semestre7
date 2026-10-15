@@ -42,6 +42,9 @@ import matplotlib.pyplot as plt
 
 np.set_printoptions(precision=6, suppress=True)
 
+# Directorio donde reside el script para guardar figuras de manera robusta
+DIR_ACTUAL = os.path.dirname(os.path.abspath(__file__))
+
 
 # ==============================================================================
 # FUNCIONES AUXILIARES DE FORMATO
@@ -165,9 +168,10 @@ debido a que la matriz de Vandermonde asociada con nodos distintos es estrictame
     plt.grid(True, linestyle='--', alpha=0.6)
     plt.legend(fontsize=10)
     plt.tight_layout()
-    plt.savefig("Talleres/fig_ejercicio1_lagrange.png", dpi=200)
+    ruta_fig1 = os.path.join(DIR_ACTUAL, "fig_ejercicio1_lagrange.png")
+    plt.savefig(ruta_fig1, dpi=200)
     plt.close()
-    print("\n-> Gráfica guardada exitosamente en 'Talleres/fig_ejercicio1_lagrange.png'")
+    print(f"\n-> Gráfica guardada exitosamente en '{ruta_fig1}'")
 
 
 # ==============================================================================
@@ -219,9 +223,10 @@ def ejecutar_ejercicio_2():
     plt.legend(fontsize=10, loc='lower center')
     plt.grid(True, linestyle='--', alpha=0.6)
     plt.tight_layout()
-    plt.savefig("Talleres/fig_ejercicio2_taylor.png", dpi=200)
+    ruta_fig2a = os.path.join(DIR_ACTUAL, "fig_ejercicio2_taylor.png")
+    plt.savefig(ruta_fig2a, dpi=200)
     plt.close()
-    print("-> Gráfica guardada en 'Talleres/fig_ejercicio2_taylor.png'")
+    print(f"-> Gráfica guardada en '{ruta_fig2a}'")
 
     # --------------------------------------------------------------------------
     # Parte B: Polinomio Interpolante
@@ -269,9 +274,10 @@ def ejecutar_ejercicio_2():
     plt.legend(fontsize=10)
     plt.grid(True, linestyle='--', alpha=0.6)
     plt.tight_layout()
-    plt.savefig("Talleres/fig_ejercicio2_comparacion.png", dpi=200)
+    ruta_fig2b = os.path.join(DIR_ACTUAL, "fig_ejercicio2_comparacion.png")
+    plt.savefig(ruta_fig2b, dpi=200)
     plt.close()
-    print("-> Gráfica guardada en 'Talleres/fig_ejercicio2_comparacion.png'")
+    print(f"-> Gráfica guardada en '{ruta_fig2b}'")
 
     # --------------------------------------------------------------------------
     # Parte C: Comparación analítica y numérica
@@ -447,9 +453,10 @@ def ejecutar_ejercicio_3():
     plt.legend(fontsize=10)
     plt.grid(True, linestyle='--', alpha=0.6)
     plt.tight_layout()
-    plt.savefig("Talleres/fig_ejercicio3_minimos_cuadrados.png", dpi=200)
+    ruta_fig3a = os.path.join(DIR_ACTUAL, "fig_ejercicio3_minimos_cuadrados.png")
+    plt.savefig(ruta_fig3a, dpi=200)
     plt.close()
-    print("-> Gráfica guardada en 'Talleres/fig_ejercicio3_minimos_cuadrados.png'")
+    print(f"-> Gráfica guardada en '{ruta_fig3a}'")
 
     # e), f) y g) Números de Condicionamiento
     print("\n--- e), f) y g) Números de Condicionamiento ---")
@@ -507,9 +514,10 @@ def ejecutar_ejercicio_3():
     plt.legend(fontsize=10)
     plt.grid(True, linestyle='--', alpha=0.6)
     plt.tight_layout()
-    plt.savefig("Talleres/fig_ejercicio3_perturbacion.png", dpi=200)
+    ruta_fig3b = os.path.join(DIR_ACTUAL, "fig_ejercicio3_perturbacion.png")
+    plt.savefig(ruta_fig3b, dpi=200)
     plt.close()
-    print("-> Gráfica guardada en 'Talleres/fig_ejercicio3_perturbacion.png'")
+    print(f"-> Gráfica guardada en '{ruta_fig3b}'")
 
     # Preguntas de análisis
     print("\n--- PREGUNTAS DE ANÁLISIS ---")
