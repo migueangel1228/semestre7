@@ -56,4 +56,4 @@ Este documento sintetiza los dos artículos científicos incorporados en el dire
 ## 3. Síntesis y Relación con el Código del Repositorio
 
 - **`src/maps.py` y `src/lyapunov.py`:** Implementan el cálculo exacto de $\lambda$ para el Mapa Logístico y el Mapa de Tienda según la definición de la Ecuación (8) de Zhang & Liu.
-- **`src/sensitivity.py`:** Modela numéricamente la sensibilidad a condiciones iniciales que sustenta la resistencia a ataques diferenciales formalizada por Wu et al. (2011).
+- **`src/bifurcation.py`:** Modela las transiciones dinámicas y bifurcaciones previas al régimen caótico.

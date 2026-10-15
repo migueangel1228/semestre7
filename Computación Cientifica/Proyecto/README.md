@@ -1,9 +1,9 @@
-# Cálculo y Análisis del Exponente de Lyapunov: Mapa Logístico y Modelo de Tienda
+# Cálculo y Análisis del Exponente de Lyapunov y Diagramas de Bifurcación
 
 > **Curso:** Computación Científica  
-> **Proyecto:** Modelado Numérico de Sistemas Dinámicos Caóticos Unidimensionales y su Aplicación en Criptografía
+> **Proyecto:** Modelado Numérico de Sistemas Dinámicos Caóticos Unidimensionales: Mapa Logístico y Modelo de Tienda
 
-Este repositorio implementa el cálculo analítico y numérico del **Exponente de Lyapunov** para el **Mapa Logístico** y el **Modelo de Tienda (Tent Map)**, acompañados de sus respectivos diagramas de bifurcación, análisis de sensibilidad a condiciones iniciales, diagramas de telaraña (*cobweb plots*), demostración del teorema de conjugación topológica y la inclusión de los artículos de investigación que vinculan la teoría del caos con el cifrado moderno de imágenes.
+Este repositorio implementa el cálculo analítico y numérico del **Exponente de Lyapunov** y los **Diagramas de Bifurcación** para el **Mapa Logístico** y el **Modelo de Tienda (Tent Map)**, acompañados de las validaciones teóricas y la inclusión de los artículos de investigación que vinculan la dinámica de estos sistemas con el cifrado de imágenes.
 
 ---
 
@@ -18,18 +18,12 @@ Este repositorio implementa el cálculo analítico y numérico del **Exponente d
 │   └── RESUMEN_PAPERS.md                                 # Resumen y conexión técnica de los artículos
 ├── figures/
 │   ├── logistic_bifurcation_lyapunov.png                 # Bifurcación y Lyapunov: Mapa Logístico
-│   ├── tent_bifurcation_lyapunov.png                     # Bifurcación y Lyapunov: Modelo de Tienda
-│   ├── lyapunov_comparison_logistic_vs_tent.png          # Comparativa lado a lado
-│   ├── sensitivity_initial_conditions.png                # Sensibilidad temporal y divergencia exponencial
-│   ├── cobweb_diagrams.png                               # Diagramas de telaraña en distintos regímenes
-│   └── conjugacy_logistic_tent.png                       # Difeomorfismo y medidas invariantes
+│   └── tent_bifurcation_lyapunov.png                     # Bifurcación y Lyapunov: Modelo de Tienda
 ├── src/
 │   ├── __init__.py                                       # Exportaciones principales del módulo
 │   ├── maps.py                                           # Clases LogisticMap y TentMap
 │   ├── lyapunov.py                                       # Algoritmos numéricos y soluciones analíticas
 │   ├── bifurcation.py                                    # Generación vectorizada de bifurcaciones
-│   ├── sensitivity.py                                    # Simulación de divergencia orbital
-│   ├── cobweb.py                                         # Algoritmo de trazado de telarañas
 │   └── visualizer.py                                     # Renderizado científico de figuras
 ├── tests/
 │   └── test_lyapunov.py                                  # Suite de pruebas unitarias automatizadas
@@ -53,10 +47,10 @@ Tomando el límite asintótico y aplicando la regla de la cadena, se obtiene:
 
 $$\lambda = \lim_{n \to \infty} \frac{1}{n} \sum_{i=0}^{n-1} \ln |f'(x_i)|$$
 
-### Interpretación Física:
+### Interpretación Dinámica:
 * **$\lambda < 0$ (Régimen Estable / Periódico):** Las trayectorias convergen a un punto fijo o ciclo límite. Las perturbaciones iniciales se atenúan exponencialmente.
 * **$\lambda = 0$ (Punto de Bifurcación / Estabilidad Marginal):** La separación no es exponencial. Marca las transiciones de duplicación de período.
-* **$\lambda > 0$ (Régimen Caótico):** **Sensibilidad extrema a las condiciones iniciales** (*Efecto Mariposa*). La información predictiva se disipa exponencialmente a una tasa de $\lambda$ nats por iteración.
+* **$\lambda > 0$ (Régimen Caótico):** Caos determinista. Pérdida exponencial de predictibilidad a una tasa de $\lambda$ nats por iteración.
 
 ---
 
@@ -98,41 +92,7 @@ $$\lambda(p) = \ln(p)$$
 
 ---
 
-## 🔄 4. Comparación y Teorema de Conjugación Topológica
-
-A pesar de que el mapa logístico es cuadrático no lineal y el mapa de tienda es lineal por tramos, ambos sistemas dinámicos son **topológicamente conjugados** en sus máximos parámetros ($r=4$ y $p=2$) a través del difeomorfismo:
-
-$$h(y) = \sin^2\left(\frac{\pi y}{2}\right)$$
-
-Se verifica idénticamente que:
-$$L_{r=4}(h(y)) = h(T_{p=2}(y)) \implies \lambda_{\text{Logístico}}(4) = \lambda_{\text{Tienda}}(2) = \ln(2) \approx 0.69314718$$
-
-| Característica | Mapa Logístico ($r=4$) | Modelo de Tienda ($p=2$) |
-| :--- | :--- | :--- |
-| **Naturaleza** | Cuadrático no lineal suave | Lineal a trozos |
-| **Exponente de Lyapunov** | $\lambda = \ln(2) \approx 0.69315$ | $\lambda = \ln(2) \approx 0.69315$ |
-| **Densidad Invariante $\rho(x)$** | $\frac{1}{\pi \sqrt{x(1-x)}}$ (Forma de U) | $1.0$ (Uniforme en $[0, 1]$) |
-| **Ventanas Periódicas** | Infinitas (densas) | Cero (caos homogéneo) |
-
-![Comparación de Exponentes de Lyapunov](figures/lyapunov_comparison_logistic_vs_tent.png)
-![Conjugación Topológica y Medidas Invariantes](figures/conjugacy_logistic_tent.png)
-
----
-
-## ⚡ 5. Sensibilidad Temporal y Diagramas de Telaraña
-
-### Divergencia Exponencial de Trayectorias
-Al iterar dos estados con una perturbación $\delta_0 = 10^{-8}$, las trayectorias permanecen indistinguibles durante $\sim 25$ iteraciones, momento a partir del cual divergen violentamente por el efecto mariposa. La pendiente de $\ln |\delta_n|$ coincide exactamente con la recta teórica $\lambda = \ln(2) \approx 0.693$.
-
-![Sensibilidad a Condiciones Iniciales](figures/sensitivity_initial_conditions.png)
-
-### Diagramas de Telaraña (*Cobweb Plots*)
-Muestran la progresión geométrica de la órbita $(x_n, x_{n+1})$ contra la recta identidad $y = x$.
-![Diagramas de Telaraña](figures/cobweb_diagrams.png)
-
----
-
-## 📊 6. Tabla de Validación Numérica (Benchmarks)
+## 📊 4. Tabla de Validación Numérica (Benchmarks)
 
 Resultados computados mediante `run_experiments.py`:
 
@@ -146,24 +106,24 @@ Resultados computados mediante `run_experiments.py`:
 
 ---
 
-## 🔐 7. Documentos Incluidos y Aplicación en Criptografía
+## 🔐 5. Documentos Incluidos y Aplicación en Criptografía
 
 En el directorio [`docs/`](docs/) se incluyen los dos artículos de referencia:
 
 1. **[`docs/Chaos-Based_Image_Encryption_Review.pdf`](docs/Chaos-Based_Image_Encryption_Review.pdf):**  
    *Zhang & Liu (2023), Mathematics (MDPI)*.
    * Revisa cómo los mapas discretos (Logístico y Tienda) generan secuencias pseudoaleatorias (PRNG) para criptografía de imágenes.
-   * Utiliza la Ecuación (8) para el exponente de Lyapunov como indicador esencial: un $\lambda > 0$ elevado asegura alta sensibilidad a la clave y resistencia a criptoanálisis.
+   * Utiliza la Ecuación (8) para el exponente de Lyapunov como indicador esencial: un $\lambda > 0$ elevado asegura alta aleatoriedad y resistencia a criptoanálisis.
 2. **[`docs/NPCR_and_UACI_Randomness_Tests_for_Image_Encryption.pdf`](docs/NPCR_and_UACI_Randomness_Tests_for_Image_Encryption.pdf):**  
    *Wu, Noonan & Agaian (2011), JSAT*.
    * Deriva rigurosamente las pruebas de hipótesis estadísticas **NPCR** ($\mu \approx 99.6094\%$) y **UACI** ($\mu \approx 33.4635\%$) para evaluar la resistencia frente a ataques diferenciales en imágenes de 8 bits.
-   * Demuestra cómo la difusión generada por mapas caóticos con $\lambda > 0$ es la que permite a un cifrador pasar los umbrales críticos de aleatoriedad.
+   * Demuestra cómo la dispersión generada por mapas con $\lambda > 0$ es la que permite a un algoritmo pasar los umbrales críticos de aleatoriedad.
 
 Consulte [`docs/RESUMEN_PAPERS.md`](docs/RESUMEN_PAPERS.md) y [`docs/TEORIA_EXPONENTE_LYAPUNOV.md`](docs/TEORIA_EXPONENTE_LYAPUNOV.md) para un desglose detallado.
 
 ---
 
-## 🚀 8. Instrucciones de Instalación y Ejecución
+## 🚀 6. Instrucciones de Instalación y Ejecución
 
 ### Prerrequisitos
 - Python 3.10 o superior (compatible con Python 3.13)
@@ -171,8 +131,8 @@ Consulte [`docs/RESUMEN_PAPERS.md`](docs/RESUMEN_PAPERS.md) y [`docs/TEORIA_EXPO
 
 ### Instalación
 ```bash
-# Clonar o entrar al directorio del proyecto
-cd "c:\Users\Usuario\OneDrive - PUJ Cali\Escritorio\SEMESTRES\SEMESTRE7\Computación Cientifica\Proyecto"
+# Entrar al directorio del proyecto
+cd "c:\Users\DELL\Desktop\Repos\semestre7\Computación Cientifica\Proyecto"
 
 # Instalar dependencias
 pip install -r requirements.txt

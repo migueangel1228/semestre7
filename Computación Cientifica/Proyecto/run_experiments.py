@@ -1,6 +1,6 @@
 """
-Script principal para ejecutar todos los cálculos numéricos de los Exponentes de Lyapunov,
-diagramas de bifurcación, sensibilidad temporal y generar las figuras del repositorio.
+Script principal para ejecutar los cálculos numéricos de los Exponentes de Lyapunov,
+diagramas de bifurcación y generar las figuras del repositorio.
 """
 
 import sys
@@ -22,10 +22,6 @@ from src.lyapunov import (
 from src.visualizer import (
     plot_logistic_complete,
     plot_tent_complete,
-    plot_comparison,
-    plot_sensitivity_analysis,
-    plot_cobweb_showcase,
-    plot_topological_conjugacy,
 )
 
 
@@ -105,25 +101,13 @@ def generate_all_figures():
     print("-> Generando figura 2: Bifurcación y Lyapunov - Mapa de Tienda...")
     plot_tent_complete("figures/tent_bifurcation_lyapunov.png")
 
-    print("-> Generando figura 3: Comparación Logístico vs Tienda...")
-    plot_comparison("figures/lyapunov_comparison_logistic_vs_tent.png")
-
-    print("-> Generando figura 4: Sensibilidad a Condiciones Iniciales...")
-    plot_sensitivity_analysis("figures/sensitivity_initial_conditions.png")
-
-    print("-> Generando figura 5: Diagramas de Telaraña (Cobweb)...")
-    plot_cobweb_showcase("figures/cobweb_diagrams.png")
-
-    print("-> Generando figura 6: Teorema de Conjugación Topológica...")
-    plot_topological_conjugacy("figures/conjugacy_logistic_tent.png")
-
     elapsed = time.time() - t0
     print(f"\n[Éxito] Todas las gráficas fueron generadas en {elapsed:.2f} segundos.")
 
 
 def main():
     print("=" * 70)
-    print("  SIMULACIÓN COMPUTACIONAL: EXPONENTE DE LYAPUNOV EN MAPAS 1D")
+    print("  SIMULACIÓN COMPUTACIONAL: EXPONENTE DE LYAPUNOV Y BIFURCACIÓN")
     print("  Modelos: Mapa Logístico & Modelo de Tienda (Tent Map)")
     print("=" * 70)
 
