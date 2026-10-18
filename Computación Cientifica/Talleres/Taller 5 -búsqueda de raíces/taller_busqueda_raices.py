@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # ==============================================================================
-# CONFIGURACIÓN VISUAL (ESTILO PUJ / ACADÉMICO)
+# CONFIGURACIÓN VISUAL 
 # ==============================================================================
 plt.rcParams.update({
     'font.size': 11,
@@ -19,7 +19,7 @@ plt.rcParams.update({
     'grid.linestyle': '--'
 })
 
-PUJ_BLUE = '#003366'
+BLUE = '#003366'
 DARK_BLUE = '#102C57'
 TEAL_COLOR = '#008080'
 ACCENT_RED = '#C0392B'
@@ -27,115 +27,87 @@ ACCENT_ORANGE = '#D35400'
 ACCENT_PURPLE = '#8E44AD'
 
 # ==============================================================================
-# 1. ALGORITMOS BASE DE BÚSQUEDA DE RAÍCES (ESTRUCTURADOS: FLAGS Y CONDICIONALES)
+# 1. ALGORITMOS BASE DE BÚSQUEDA DE RAÍCES
 # ==============================================================================
 def biseccion(f, a, b, tol, max_iter=200):
     iters = 0
-    terminado = False
     hist = []
-    
-    while not terminado and iters < max_iter:
-        error = (b - a) / 2.0
-        if error < tol:
-            terminado = True
+    while (b - a) / 2.0 >= tol and iters < max_iter:
+        iters += 1
+        m = (a + b) / 2.0
+        fm = f(m)
+        hist.append((a, b, m, fm, (b - a) / 2.0))
+        if f(a) * fm <= 0:
+            b = m
         else:
-            iters += 1
-            m = (a + b) / 2.0
-            fm = f(m)
-            hist.append((a, b, m, fm, (b - a) / 2.0))
-            if f(a) * fm <= 0:
-                b = m
-            else:
-                a = m
-                
-    raiz = (a + b) / 2.0
-    return raiz, iters, hist
+            a = m
+    root = (a + b) / 2.0
+    return root, iters, hist
 
 def newton_raphson(f, df, x0, tol, max_iter=200):
     iters = 0
     x = x0
-    terminado = False
     hist = []
-    
-    while not terminado and iters < max_iter:
+    while iters < max_iter:
         iters += 1
         fx = f(x)
         dfx = df(x)
         x_next = x - fx / dfx
-        error = abs(x_next - x)
-        hist.append((x, fx, dfx, x_next, error))
-        if error < tol:
-            terminado = True
+        diff = abs(x_next - x)
+        hist.append((x, fx, dfx, x_next, diff))
+        if diff < tol:
+            return x_next, iters, hist
         x = x_next
-        
     return x, iters, hist
 
 def secante(f, x0, x1, tol, max_iter=200):
     iters = 0
-    terminado = False
-    p0 = x0
-    p1 = x1
-    raiz = p1
     hist = []
-    
-    while not terminado and iters < max_iter:
+    while iters < max_iter:
         iters += 1
-        fp0 = f(p0)
-        fp1 = f(p1)
-        p2 = p1 - fp1 * (p1 - p0) / (fp1 - fp0)
-        error = abs(p2 - p1)
-        hist.append((p0, p1, fp1, p2, error))
-        if error < tol:
-            terminado = True
-        p0 = p1
-        p1 = p2
-        raiz = p2
-        
-    return raiz, iters, hist
+        fx0 = f(x0)
+        fx1 = f(x1)
+        x2 = x1 - fx1 * (x1 - x0) / (fx1 - fx0)
+        diff = abs(x2 - x1)
+        hist.append((x0, x1, fx1, x2, diff))
+        if diff < tol:
+            return x2, iters, hist
+        x0, x1 = x1, x2
+    return x1, iters, hist
 
 def falsa_posicion(f, a, b, tol, max_iter=200):
     iters = 0
-    terminado = False
     c_prev = None
-    raiz = a
     hist = []
-    
-    while not terminado and iters < max_iter:
+    while iters < max_iter:
         iters += 1
         fa = f(a)
         fb = f(b)
         c = b - fb * (b - a) / (fb - fa)
         fc = f(c)
-        error = abs(c - c_prev) if c_prev is not None else abs(b - a)
-        hist.append((a, b, c, fc, error))
-        
+        diff = abs(c - c_prev) if c_prev is not None else abs(b - a)
+        hist.append((a, b, c, fc, diff))
         if c_prev is not None and abs(c - c_prev) < tol:
-            terminado = True
+            return c, iters, hist
+        c_prev = c
+        if fa * fc <= 0:
+            b = c
         else:
-            c_prev = c
-            if fa * fc <= 0:
-                b = c
-            else:
-                a = c
-        raiz = c
-        
-    return raiz, iters, hist
+            a = c
+    return c, iters, hist
 
 def punto_fijo(g, x0, tol, max_iter=200):
     iters = 0
     x = x0
-    terminado = False
     hist = []
-    
-    while not terminado and iters < max_iter:
+    while iters < max_iter:
         iters += 1
         x_next = g(x)
-        error = abs(x_next - x)
-        hist.append((x, x_next, error))
-        if error < tol:
-            terminado = True
+        diff = abs(x_next - x)
+        hist.append((x, x_next, diff))
+        if diff < tol:
+            return x_next, iters, hist
         x = x_next
-        
     return x, iters, hist
 
 # ==============================================================================
@@ -155,6 +127,7 @@ def f1(t):
     return T_func(t) - 60.0
 
 def df1(t):
+    # Derivada analítica del polinomio
     powers = np.arange(1, len(c_poly))
     c_der = powers * c_poly[1:]
     return np.polyval(c_der[::-1], t)
@@ -232,7 +205,7 @@ fig, ax = plt.subplots(figsize=(7.5, 4.5), dpi=300)
 t_dense = np.linspace(0, 6.2, 500)
 T_dense = T_func(t_dense)
 
-ax.plot(t_dense, T_dense, color=PUJ_BLUE, label=r'$T(t)$ interpolante')
+ax.plot(t_dense, T_dense, color=BLUE, label=r'$T(t)$ interpolante')
 ax.scatter(t_exp, T_exp, color=DARK_BLUE, s=50, zorder=5, label='Datos experimentales')
 ax.axhline(60, color=ACCENT_RED, linestyle='--', label=r'$T_{\mathrm{crit}} = 60\,^\circ\mathrm{C}$')
 
@@ -257,7 +230,7 @@ fig, ax = plt.subplots(figsize=(7.5, 4.5), dpi=300)
 n_dense = np.linspace(450, 650, 500)
 T2_dense = T2_func(n_dense)
 
-ax.plot(n_dense, T2_dense, color=PUJ_BLUE, label=r'$T(n) = 0.02n\log_2(n) + 0.5e^{0.003n}$')
+ax.plot(n_dense, T2_dense, color=BLUE, label=r'$T(n) = 0.02n\log_2(n) + 0.5e^{0.003n}$')
 ax.axhline(100, color=ACCENT_RED, linestyle='--', label='Presupuesto límite: 100 ms')
 
 n_star = 537.447345
@@ -287,8 +260,9 @@ print("Guardada: fig_actividad2_tiempo_servicio.png")
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4.5), dpi=300)
 
 tol_ref = 1e-10
+# Actividad 1
 colores = {
-    'Bisección': PUJ_BLUE,
+    'Bisección': BLUE,
     'Newton-Raphson': ACCENT_RED,
     'Secante': TEAL_COLOR,
     'Falsa posición': ACCENT_ORANGE,
